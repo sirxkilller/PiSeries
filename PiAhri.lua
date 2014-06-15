@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.09
+local version = "1.10"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -71,36 +71,6 @@ local SpellQ = {Speed = 1600, Range = 950, Delay = 0.250, Width = 100}
 local SpellE = {Speed = 1500, Range = 975, Delay = 0.250, Width = 60}
 local SpellW = {Speed = nil, Range = 800, Delay = 0.250, Width = nil}
 
-
-function GetCustomTarget()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
-    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-    return ts.target
-end
-
-function OnLoad()
-	PiSet()
-	VP = VPrediction()
-	OW = SOW(VP)
-	setupMenu()
-
-end
-
-function PiSet()
-        for _, champ in pairs(InterruptList) do
-        	if hero.charName == champ.charName then
-        		table.insert(ToInterrupt, champ.spellName)
-        	end
-        end
-	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGICAL)
-	ts.name = "Ahri"
-	menu:addTS(ts)
-	EnemyMinions = minionManager(MINION_ENEMY, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
-	JungleMinions = minionManager(MINION_JUNGLE, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
-    print('PiAhri ' .. tostring(version) .. ' loaded!')
-    PiSetUp = true
-end
-
 function setupMenu()
 
 	menu = scriptConfig("PiAhri", "PiAhri")
@@ -146,6 +116,37 @@ function setupMenu()
 	menu.combo:permaShow("active")
 	menu.harass:permaShow("active")
 end
+
+function OnLoad()
+	
+	VP = VPrediction()
+	OW = SOW(VP)
+	setupMenu()
+	PiSet()
+
+end
+
+function PiSet()
+        for _, champ in pairs(InterruptList) do
+        	if hero.charName == champ.charName then
+        		table.insert(ToInterrupt, champ.spellName)
+        	end
+        end
+	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGICAL)
+	ts.name = "Ahri"
+	menu:addTS(ts)
+	EnemyMinions = minionManager(MINION_ENEMY, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
+	JungleMinions = minionManager(MINION_JUNGLE, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
+    print('PiAhri ' .. tostring(version) .. ' loaded!')
+    PiSetUp = true
+end
+
+function GetCustomTarget()
+    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
+    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
+    return ts.target
+end
+
 
 function OnTick()
 
