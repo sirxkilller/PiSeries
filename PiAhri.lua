@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.07
+local version = 1.08
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -93,19 +93,11 @@ function GetCustomTarget()
 end
 
 function OnLoad()
-
+	PiSet()
 	VP = VPrediction()
 	OW = SOW(VP)
 	Checks()
-	if PiSetUp then
-			setupMenu()
-			AddTickCallback(combo)
-			AddTickCallback(harass)
-			ts:update()
-			KillSteal()
-			target = ts.target
-			EnemyMinions:update()
-	end
+	setupMenu()
 
 end
 
@@ -157,6 +149,14 @@ end
 
 function OnTick()
 
+	if PiSetUp then
+			AddTickCallback(combo)
+			AddTickCallback(harass)
+			ts:update()
+			KillSteal()
+			target = ts.target
+			EnemyMinions:update()
+	end
 	OW:EnableAttacks()
 	
 end
@@ -174,8 +174,8 @@ function combo()
 		end
 
 		-- Q
-		if target and menu.combo.useQ and QReady and (isCharmed(target) or not menu.extra.charm or not spells[E]:IsReady()) and (not menu.combo.useE) then 
-		CastQ(targets[Q])
+		if target and menu.combo.useQ and QReady and (isCharmed(target) or not menu.extra.charm or not EReady) and (not menu.combo.useE) then 
+		CastQ(target)
 		end
 
 		-- W
@@ -190,7 +190,7 @@ function combo()
 			end
 		end
 
-		if not spells[Q]:IsReady() and not spells[W]:IsReady() and not spells[E]:IsReady() then
+		if not QReady and not WReady and not EReady then
 			OW:EnableAttacks()
 		end
 	end
