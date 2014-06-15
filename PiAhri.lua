@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.06
+local version = 1.07
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -145,9 +145,10 @@ function setupMenu()
 		menu.extra:addParam("chanceE", "Hitchance for E",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 
 	menu:addSubMenu("Drawings", "Draw")
-		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
-		menu.Draw:addParam("DrawW", "Draw W", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
-		menu.Draw:addParam("DrawE", "Draw E", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+		menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawW", "Draw W", SCRIPT_PARAM_ONOFF, false)
+		menu.Draw:addParam("DrawE", "Draw E", SCRIPT_PARAM_ONOFF, true)
 
 
 	menu.combo:permaShow("active")
