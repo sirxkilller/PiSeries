@@ -1,26 +1,13 @@
 -- PiAhri - simple as f***
 
+local version = 1.03
 local AUTOUPDATE = true
 local silentUpdate = false
 
-local version = 1.03
-
 if myHero.charName ~= "Ahri" then return end
 
-local scriptName = player.charName
-
-
-local sourceLibFound = true
-if FileExist(LIB_PATH .. "SourceLib.lua") then
-	require "SourceLib"
-else
-	sourceLibFound = false
-	DownloadFile("https://raw.githubusercontent.com/TheRealSource/public/master/common/SourceLib.lua", LIB_PATH .. "SourceLib.lua", function() print("<font color=\"#DF7401\"><b>" .. scriptName .. ":</b></font> <font color=\"#FFFFFF\">SourceLib downloaded! Please reload!</font>") end)
-end
-
-if not sourceLibFound then return end
-
-
+require 'VPrediction'
+require 'SOW'
 
 local UPDATE_NAME = "PiAhri"
 local UPDATE_HOST = "raw.github.com"
@@ -48,81 +35,78 @@ if AUTOUPDATE then
 		AutoupdaterMsg("Error downloading version info")
 	end
 end
-    --SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/PiSeries/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
-
-
-
-local libDownloader = Require(scriptName)
-libDownloader:Add("VPrediction", "https://bitbucket.org/honda7/bol/raw/master/Common/VPrediction.lua")
-libDownloader:Add("SOW",         "https://bitbucket.org/honda7/bol/raw/master/Common/SOW.lua")
-libDownloader:Check()
-
-if libDownloader.downloadNeeded then return end
 
 local VP   = nil
 local OW   = nil
-local STS  = nil
-local DLib = nil
-local drawManager = nil
-
 local menu = nil
-
-local spells  = {}
-local circles = {}
-
-local MainCombo = {ItemManager:GetItem("DFG"):GetId(), _AA, _E, _W, _Q}
-local QCombo = {_Q}
-local WCombo = {_W}
-local ECombo = {_E}
-
-local Q, W, E, R = _Q, _W, _E, _R
+local target = nil
+local PiSetUp = false
+local EnemyMinions, JungleMinions = nil, nil
+local ignite, igniteReady = nil, false
 
 local CHARM_NAME = "AhriSeduce"
 local MAX_RANGE  = 920
 
-local SPELL_DATA = { [_Q] = { skillshotType = SKILLSHOT_LINEAR, range = 950, delay = 0.25, width = 100, speed = 1600, collision = false }, -- used for sourcelib - only some minor details
-					 [_W] = { skillshotType = nil,              range = 800, collision = false },
-					 [_E] = { skillshotType = SKILLSHOT_LINEAR, range = 975, delay = 0.25, width = 60, speed = 1500, collision = true },
-					 [_R] = { skillshotType = nil,              range = 450, collision = false } }
-					 
+local ToInterrupt = {}
+local InterruptList = {
+    { charName = "Caitlyn", spellName = "CaitlynAceintheHole"},
+    { charName = "FiddleSticks", spellName = "Crowstorm"},
+    { charName = "FiddleSticks", spellName = "DrainChannel"},
+    { charName = "Galio", spellName = "GalioIdolOfDurand"},
+    { charName = "Karthus", spellName = "FallenOne"},
+    { charName = "Katarina", spellName = "KatarinaR"},
+    { charName = "Lucian", spellName = "LucianR"},
+    { charName = "Malzahar", spellName = "AlZaharNetherGrasp"},
+    { charName = "MissFortune", spellName = "MissFortuneBulletTime"},
+    { charName = "Nunu", spellName = "AbsoluteZero"},
+    { charName = "Pantheon", spellName = "Pantheon_GrandSkyfall_Jump"},
+    { charName = "Shen", spellName = "ShenStandUnited"},
+    { charName = "Urgot", spellName = "UrgotSwap2"},
+    { charName = "Varus", spellName = "VarusQ"},
+    { charName = "Warwick", spellName = "InfiniteDuress"}
+}
+
+ 
 local SpellQ = {Speed = 1600, Range = 950, Delay = 0.250, Width = 100}
 local SpellE = {Speed = 1500, Range = 975, Delay = 0.250, Width = 60}
+local SpellW = {Speed = nil, Range = 800, Delay = 0.250, Width = nil}
+
+function PiSet()
+        for _, champ in pairs(InterruptList) do
+        	if hero.charName == champ.charName then
+        		table.insert(ToInterrupt, champ.spellName)
+        	end
+        end
+    end
+	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGICAL)
+	ts.name = "Ahri"
+	menu:addTS(ts)
+	EnemyMinions = minionManager(MINION_ENEMY, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
+	JungleMinions = minionManager(MINION_JUNGLE, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
+    print('PiAhri ' .. tostring(version) .. ' loaded!')
+    PiSetUp = true
+end
+
+function GetCustomTarget()
+    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
+    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
+    return ts.target
+end
 
 function OnLoad()
 
-	VP   = VPrediction()
-	OW   = SOW(VP)
-	STS  = SimpleTS(STS_PRIORITY_LESS_CAST_MAGIC)
-	DLib = DamageLib()
-	drawManager = DrawManager()
-
-
-	for spell, data in pairs(SPELL_DATA) do
-
-		local rawSpell = Spell(spell, data.range)
-
-		if data.skillshotType then
-			rawSpell:SetSkillshot(VP, data.skillshotType, data.delay, data.width, data.speed, data.collision)
-		end
-		table.insert(spells, spell, rawSpell)
-		print(rawSpell.collision)
-
-		local rawCircle = drawManager:CreateCircle(player, data.range)
-
-		rawCircle:LinkWithSpell(rawSpell)
-		rawCircle:SetDrawCondition(function() return rawSpell:GetLevel() > 0 end)
-		table.insert(circles, spell, rawCircle)
-
+	VP = VPrediction()
+	OW = SOW(VP)
+	Checks()
+	if PiSetUp then
+			setupMenu()
+			AddTickCallback(combo)
+			AddTickCallback(harass)
+			ts:update()
+			KillSteal()
+			target = ts.target
+			EnemyMinions:update()
 	end
-
-	DLib:RegisterDamageSource(Q, _MAGIC, 20, 22.5, _MAGIC, _AP, 0.33, function() return spells[Q]:IsReady() end)
-	DLib:RegisterDamageSource(W, _MAGIC, 20, 22.5, _MAGIC, _AP, 0.13, function() return spells[W]:IsReady() end)
-	DLib:RegisterDamageSource(E, _MAGIC, 30, 30, _MAGIC, _AP, 0.35, function() return spells[E]:IsReady() end)
-
-	setupMenu()
-
-	AddTickCallback(combo)
-	AddTickCallback(harass)
 
 end
 
@@ -134,10 +118,6 @@ function setupMenu()
 		OW:LoadToMenu(menu.orbwalking)
 
 
-	menu:addSubMenu("Target Selector", "ts")
-		STS:AddToMenu(menu.ts)
-
-
 	menu:addSubMenu("Combo", "combo")
 		menu.combo:addParam("active", "Combo active" , SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
@@ -145,7 +125,6 @@ function setupMenu()
 		menu.combo:addParam("useW",   "Use W",         SCRIPT_PARAM_ONOFF,     true)
 		menu.combo:addParam("useE",   "Use E",         SCRIPT_PARAM_ONOFF,     true)
 
-	-- Harass
 	menu:addSubMenu("Harass", "harass")
 		menu.harass:addParam("active",    "Harass active" ,           SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 		menu.harass:addParam("sep",       "",                         SCRIPT_PARAM_INFO,      "")
@@ -154,26 +133,24 @@ function setupMenu()
 		menu.harass:addParam("useW",      "Use W",                    SCRIPT_PARAM_ONOFF,     true)
 		menu.harass:addParam("useE",      "Use E",                    SCRIPT_PARAM_ONOFF,     false)
 
-	-- Extra
+	menu:addSubMenu("Farm", "farm")
+		menu.extra:addParam("active", "Farm",          				 	SCRIPT_PARAM_ONOFF, true)
+		menu.extra:addParam("sep",     "",                          	SCRIPT_PARAM_INFO,  "")
+		menu.extra:addParam("useQ", "Q",           						SCRIPT_PARAM_ONOFF, true)
+		menu.extra:addParam("useW", "W",           						SCRIPT_PARAM_ONOFF, true)
+		
 	menu:addSubMenu("Extra", "extra")
 		menu.extra:addParam("charm",   "Try to Charm with E first",          				 SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("autoQ",   "Automatically Cast Q if Dashing",                    SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("autoQ2",  "Automatically Cast Q if Immobile",                   SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("autoE",   "Automatically Cast E if Dashing",                    SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("autoE2",  "Automatically Cast E if Immobile",                   SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("packet",  "Cast spells using packets", 						 SCRIPT_PARAM_ONOFF, false)
 		menu.extra:addParam("sep",     "",                          						 SCRIPT_PARAM_INFO,  "")
 		menu.extra:addParam("chanceQ", "Hitchance for Q",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 		menu.extra:addParam("chanceE", "Hitchance for E",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
-	
-	-- Drawings
-	menu:addSubMenu("Drawings", "drawing")
-		for spell, circle in pairs(circles) do
-			circle:AddToMenu(menu.drawing, "Draw " .. SpellToString(spell) .. " range", true, true, true)
-		end
-		DLib:AddToMenu(menu.drawing, MainCombo)
 
-	-- Permashow
+	menu:addSubMenu("Drawings", "Draw")
+		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+		menu.Draw:addParam("DrawW", "Draw W", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+		menu.Draw:addParam("DrawE", "Draw E", SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+
+
 	menu.combo:permaShow("active")
 	menu.harass:permaShow("active")
 end
@@ -181,23 +158,7 @@ end
 function OnTick()
 
 	OW:EnableAttacks()
-
-	for i, enemy in ipairs(GetEnemyHeroes()) do
-			if menu.extra.autoE and ValidTarget(enemy) then
-				spells[E]:CastIfDashing(enemy)
-		end	
-
-			if menu.extra.autoQ then
-				spells[Q]:CastIfDashing(enemy)
-		end	
-
-			if menu.extra.autoE2 then
-				spells[E]:CastIfImmobile(enemy)
-		end
-			if menu.extra.autoQ2 then
-				spells[Q]:CastIfImmobile(enemy)
-		end
-	end
+	
 end
 
 
@@ -206,32 +167,27 @@ function combo()
 	if menu.combo.active then
 		OW:DisableAttacks()
 
-		local targets = { [Q] = STS:GetTarget(spells[Q].range),
-						  [W] = STS:GetTarget(spells[W].range),
-						  [E] = STS:GetTarget(spells[E].range) }
-
-	
-		-- Item
-		 if targets[E] and DLib:IsKillable(targets[E], MainCombo) then ItemManager:CastOffensiveItems(targets[E]) end
 
 		-- E
-		if targets[E] and menu.combo.useE and spells[E]:IsReady() and not isCharmed(targets[E]) then 
-		CastE(targets[E])
+		if target and menu.combo.useE and EReady and not isCharmed(target) then 
+		CastE(target)
 		end
 
 		-- Q
-		if targets[Q] and menu.combo.useQ and spells[Q]:IsReady() and (isCharmed(targets[Q]) or not menu.extra.charm or not spells[E]:IsReady()) and (not targets[E] or not spells[E]:IsReady() or not menu.combo.useE) then 
+		if target and menu.combo.useQ and QReady and (isCharmed(target) or not menu.extra.charm or not spells[E]:IsReady()) and (not menu.combo.useE) then 
 		CastQ(targets[Q])
 		end
 
 		-- W
-		if targets[W] and menu.combo.useW and spells[W]:IsReady() and (isCharmed(targets[W]) or DLib:IsKillable(targets[W], WCombo) or not menu.extra.charm) and (not targets[E] or not spells[E]:IsReady() or not menu.combo.useE) then spells[W]:Cast() end
+		if target and menu.combo.useW and WReady and (isCharmed(target) or not menu.extra.charm) and (EReady or not menu.combo.useE) and GetDistance(target) <= WRange then CastSpell(_W) end
 
 		-- Combo
-		if menu.combo.useE and targets[E] and menu.combo.useQ and targets[Q] and menu.combo.useW and targets[W] and spells[E]:IsReady() and spells[Q]:IsReady() and spells[W]:IsReady() then
-			spells[E]:Cast(targets[E])
-			spells[Q]:Cast(targets[Q])
-			spells[W]:Cast(targets[W])
+		if menu.combo.useE and target and menu.combo.useQ  and menu.combo.useW and EReady and QReady and WReady then
+			CastE(target)
+			CastQ(target)
+			if GetDistance(target <= SpellW.Range then
+				CastSpell(_W)
+			end
 		end
 
 		if not spells[Q]:IsReady() and not spells[W]:IsReady() and not spells[E]:IsReady() then
@@ -243,27 +199,68 @@ end
 
 function harass()
 	if menu.harass.active then
+		if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
+		if target and QReady and menu.harass.useQ then
+			CastQ(target)
+		end
 
-	local targets = {[Q] = STS:GetTarget(spells[Q].range),
-					 [W] = STS:GetTarget(spells[W].range),
-					 [E] = STS:GetTarget(spells[E].range) }
-
-
-	if targets[Q] and spells[Q]:IsReady() and menu.harass.useQ then
-		spells[Q]:Cast(targets[Q])
-	end
-
-	if targets[W] and spells[W]:IsReady() and menu.harass.useW then
-		spells[W]:Cast(targets[W])
-	end
-
-	if targets[E] and spells[E]:IsReady() and menu.harass.useE then
-		spells[E]:Cast(targets[E])
+		if target and WReady and menu.harass.useW then
+			CastE(target)
+		end
 	end
 end
+
+function Farm()
+	if menu.farm.active then
+		if menu.farm.useQ then
+			FarmQ()
+		end
+	end
 end
+
+function FarmQ()
+	if QReady and #EnemyMinions.objects > 0 then
+		local QPos = GetBestQPositionFarm()
+		if QPos then
+			CastSpell(_Q, QPos.x, QPos.z)
+		end
+	end
+end
+
+function GetBestQPositionFarm()
+	local MaxQ = 0 
+	local MaxQPos 
+	for i, minion in pairs(EnemyMinions.objects) do
+		local hitQ = countminionshitQ(minion)
+		if hitQ ~= nil and hitQ > MaxQ or MaxQPos == nil then
+			MaxQPos = minion
+			MaxQ = hitQ
+		end
+	end
+
+	if MaxQPos then
+		local CastPosition = MaxQPos
+		return CastPosition
+	else
+		return nil
+	end
+end
+
+function countminionshitQ(pos)
+	local n = 0
+	local ExtendedVector = Vector(myHero) + Vector(Vector(pos) - Vector(myHero)):normalized()*SpellQ.Range
+	local EndPoint = Vector(myHero) + ExtendedVector
+	for i, minion in ipairs(EnemyMinions.objects) do
+		local MinionPointSegment, MinionPointLine, MinionIsOnSegment =  VectorPointProjectionOnLineSegment(Vector(myHero), Vector(EndPoint), Vector(minion)) 
+		local MinionPointSegment3D = {x=MinionPointSegment.x, y=pos.y, z=MinionPointSegment.y}
+		if MinionIsOnSegment and GetDistance(MinionPointSegment3D, pos) < SpellQ.Width then
+			n = n +1
+		end
+	end
+	return n
+end
+
 
 function CastQ(Target)
 		local targets = {[E] = STS:GetTarget(spells[E].range) }				  
@@ -282,7 +279,46 @@ function CastE(Target)
 	end
 end
 
+function HasBuff(unit, buffname)
+    for i = 1, unit.buffCount do
+        local tBuff = unit:getBuff(i)
+        if tBuff.valid and BuffIsValid(tBuff) and tBuff.name == buffname then
+            return true
+        end
+    end
+    return false
+end
+
 
 function isCharmed(target)
 	return HasBuff(target, CHARM_NAME)
+end
+
+function Checks()
+	QReady = (myHero:CanUseSpell(_Q) == READY)
+	WReady = (myHero:CanUseSpell(_W) == READY)
+	EReady = (myHero:CanUseSpell(_E) == READY)
+	RReady = (myHero:CanUseSpell(_R) == READY)
+end
+
+
+function OnDraw()
+	if menu.Draw.DrawTarget then
+		if target ~= nil then
+			DrawCircle3D(target.x, target.y, target.z, VP:GetHitBox(target), 1, ARGB(255, 255, 0, 0))
+		end
+	end
+
+	if menu.Draw.DrawQ then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+
+	if menu.Draw.DrawW then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellW.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+
+	if menu.Draw.DrawE then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellE.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+
 end
