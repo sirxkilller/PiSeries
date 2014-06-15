@@ -1,9 +1,9 @@
 -- PiAhri - simple as f***
 
-local autoUpdate   = true
+local AUTOUPDATE = true
 local silentUpdate = false
 
-local version = 1.01
+local version = 1.02
 
 if myHero.charName ~= "Ahri" then return end
 
@@ -21,9 +21,35 @@ end
 if not sourceLibFound then return end
 
 
-if autoUpdate then
-    SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/PiSeries/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
+
+local UPDATE_NAME = "PiAhri"
+local UPDATE_HOST = "raw.github.com"
+local UPDATE_PATH = "/RankedFire/PiSeries/master/PiAhri.lua".."?rand="..math.random(1,10000)
+local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
+local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
+
+function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>"..UPDATE_NAME..":</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+if AUTOUPDATE then
+	local ServerData = GetWebResult(UPDATE_HOST, UPDATE_PATH, "", 5)
+	if ServerData then
+		local ServerVersion = string.match(ServerData, "local version = \"%d+.%d+\"")
+		ServerVersion = string.match(ServerVersion and ServerVersion or "", "%d+.%d+")
+		if ServerVersion then
+			ServerVersion = tonumber(ServerVersion)
+			if tonumber(version) < ServerVersion then
+				AutoupdaterMsg("New version available"..ServerVersion)
+				AutoupdaterMsg("Updating, please don't press F9")
+				DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end)	 
+			else
+				AutoupdaterMsg("You have got the latest version ("..ServerVersion..")")
+			end
+		end
+	else
+		AutoupdaterMsg("Error downloading version info")
+	end
 end
+    --SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/PiSeries/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
+
 
 
 local libDownloader = Require(scriptName)
@@ -54,11 +80,13 @@ local Q, W, E, R = _Q, _W, _E, _R
 local CHARM_NAME = "AhriSeduce"
 local MAX_RANGE  = 920
 
-local SPELL_DATA = { [_Q] = { skillshotType = SKILLSHOT_LINEAR, range = 950, delay = 0.25, width = 100, speed = 1600, collision = false },
+local SPELL_DATA = { [_Q] = { skillshotType = SKILLSHOT_LINEAR, range = 950, delay = 0.25, width = 100, speed = 1600, collision = false }, -- used for sourcelib - only some minor details
 					 [_W] = { skillshotType = nil,              range = 800, collision = false },
 					 [_E] = { skillshotType = SKILLSHOT_LINEAR, range = 975, delay = 0.25, width = 60, speed = 1500, collision = true },
 					 [_R] = { skillshotType = nil,              range = 450, collision = false } }
-
+					 
+local SpellQ = {Speed = 1600, Range = 950, Delay = 0.250, Width = 100}
+local SpellE = {Speed = 1500, Range = 975, Delay = 0.250, Width = 60}
 
 function OnLoad()
 
@@ -152,11 +180,6 @@ end
 
 function OnTick()
 
-	spells[Q]:SetHitChance(menu.extra.chanceQ)
-	spells[E]:SetHitChance(menu.extra.chanceE)
-	spells[Q].packetCast = menu.extra.packet
-	spells[E].packetCast = menu.extra.packet
-
 	OW:EnableAttacks()
 
 	for i, enemy in ipairs(GetEnemyHeroes()) do
@@ -192,10 +215,14 @@ function combo()
 		 if targets[E] and DLib:IsKillable(targets[E], MainCombo) then ItemManager:CastOffensiveItems(targets[E]) end
 
 		-- E
-		if targets[E] and menu.combo.useE and spells[E]:IsReady() and not isCharmed(targets[E]) then spells[E]:Cast(targets[E]) end
+		if targets[E] and menu.combo.useE and spells[E]:IsReady() and not isCharmed(targets[E]) then 
+		CastE(targets[E])
+		end
 
 		-- Q
-		if targets[Q] and menu.combo.useQ and spells[Q]:IsReady() and (isCharmed(targets[Q]) or not menu.extra.charm or not spells[E]:IsReady()) and (not targets[E] or not spells[E]:IsReady() or not menu.combo.useE) then spells[Q]:Cast(targets[Q]) end
+		if targets[Q] and menu.combo.useQ and spells[Q]:IsReady() and (isCharmed(targets[Q]) or not menu.extra.charm or not spells[E]:IsReady()) and (not targets[E] or not spells[E]:IsReady() or not menu.combo.useE) then 
+		CastQ(targets[Q])
+		end
 
 		-- W
 		if targets[W] and menu.combo.useW and spells[W]:IsReady() and (isCharmed(targets[W]) or DLib:IsKillable(targets[W], WCombo) or not menu.extra.charm) and (not targets[E] or not spells[E]:IsReady() or not menu.combo.useE) then spells[W]:Cast() end
@@ -236,6 +263,26 @@ function harass()
 		spells[E]:Cast(targets[E])
 	end
 end
+end
+
+function CastQ(Target)
+local targets = {[E] = STS:GetTarget(spells[E].range) }
+						  
+		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellQ.Delay, SpellQ.Width, SpellQ.Range, SpellQ.Speed, myHero, false)
+		if HitChance >= menu.extra.chanceQ then
+			CastSpell(_Q, CastPosition.x, CastPosition.z)
+		end
+	end
+end
+
+function CastE(Target)
+local targets = { [Q] = STS:GetTarget(spells[Q].range) }
+				  
+		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellE.Delay, SpellE.Width, SpellE.Range, SpellE.Speed, myHero, true)
+		if HitChance >= menu.extra.chanceE then
+			CastSpell(_E, CastPosition.x, CastPosition.z)
+		end
+	end
 end
 
 
