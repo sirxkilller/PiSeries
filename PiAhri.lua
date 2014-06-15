@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.05
+local version = 1.06
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -184,7 +184,7 @@ function combo()
 		if menu.combo.useE and target and menu.combo.useQ  and menu.combo.useW and EReady and QReady and WReady then
 			CastE(target)
 			CastQ(target)
-			if GetDistance(target <= SpellW.Range then
+			if GetDistance(target) <= SpellW.Range then
 				CastSpell(_W)
 			end
 		end
