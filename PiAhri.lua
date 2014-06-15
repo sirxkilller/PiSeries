@@ -3,7 +3,7 @@
 local AUTOUPDATE = true
 local silentUpdate = false
 
-local version = 1.02
+local version = 1.03
 
 if myHero.charName ~= "Ahri" then return end
 
@@ -266,22 +266,19 @@ end
 end
 
 function CastQ(Target)
-local targets = {[E] = STS:GetTarget(spells[E].range) }
-						  
+		local targets = {[E] = STS:GetTarget(spells[E].range) }				  
 		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellQ.Delay, SpellQ.Width, SpellQ.Range, SpellQ.Speed, myHero, false)
 		if HitChance >= menu.extra.chanceQ then
-			CastSpell(_Q, CastPosition.x, CastPosition.z)
-		end
+		CastSpell(_Q, CastPosition.x, CastPosition.z)
 	end
 end
 
 function CastE(Target)
-local targets = { [Q] = STS:GetTarget(spells[Q].range) }
-				  
+		local targets = { [Q] = STS:GetTarget(spells[Q].range) }		  
 		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellE.Delay, SpellE.Width, SpellE.Range, SpellE.Speed, myHero, true)
 		if HitChance >= menu.extra.chanceE then
-			CastSpell(_E, CastPosition.x, CastPosition.z)
-		end
+		CastSpell(_E, CastPosition.x, CastPosition.z)
+		
 	end
 end
 
