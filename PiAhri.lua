@@ -3,7 +3,7 @@
 local autoUpdate   = true
 local silentUpdate = false
 
-local version = 1.00
+local version = 1.01
 
 if myHero.charName ~= "Ahri" then return end
 
@@ -183,9 +183,9 @@ function combo()
 	if menu.combo.active then
 		OW:DisableAttacks()
 
-		local targets = { [Q] = STS:GetTarget(spells[Q].range) 
-						 ,[W] = STS:GetTarget(spells[W].range) 
-						 ,[E] = STS:GetTarget(spells[E].range) }
+		local targets = { [Q] = STS:GetTarget(spells[Q].range),
+						  [W] = STS:GetTarget(spells[W].range),
+						  [E] = STS:GetTarget(spells[E].range) }
 
 	
 		-- Item
@@ -219,9 +219,9 @@ function harass()
 
 	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-	local targets = { [Q] = STS:GetTarget(spells[Q].range) 
-					 ,[W] = STS:GetTarget(spells[W].range) 
-					 ,[E] = STS:GetTarget(spells[E].range) }
+	local targets = {[Q] = STS:GetTarget(spells[Q].range),
+					 [W] = STS:GetTarget(spells[W].range),
+					 [E] = STS:GetTarget(spells[E].range) }
 
 
 	if targets[Q] and spells[Q]:IsReady() and menu.harass.useQ then
