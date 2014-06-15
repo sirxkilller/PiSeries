@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.08
+local version = 1.09
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -71,6 +71,21 @@ local SpellQ = {Speed = 1600, Range = 950, Delay = 0.250, Width = 100}
 local SpellE = {Speed = 1500, Range = 975, Delay = 0.250, Width = 60}
 local SpellW = {Speed = nil, Range = 800, Delay = 0.250, Width = nil}
 
+
+function GetCustomTarget()
+    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
+    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
+    return ts.target
+end
+
+function OnLoad()
+	PiSet()
+	VP = VPrediction()
+	OW = SOW(VP)
+	setupMenu()
+
+end
+
 function PiSet()
         for _, champ in pairs(InterruptList) do
         	if hero.charName == champ.charName then
@@ -86,24 +101,9 @@ function PiSet()
     PiSetUp = true
 end
 
-function GetCustomTarget()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
-    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-    return ts.target
-end
-
-function OnLoad()
-	PiSet()
-	VP = VPrediction()
-	OW = SOW(VP)
-	Checks()
-	setupMenu()
-
-end
-
 function setupMenu()
 
-	menu = scriptConfig("Pi" .. player.charName, "Pi" .. player.charName)
+	menu = scriptConfig("PiAhri", "PiAhri")
 
 	menu:addSubMenu("Orbwalking", "orbwalking")
 		OW:LoadToMenu(menu.orbwalking)
@@ -156,6 +156,7 @@ function OnTick()
 			KillSteal()
 			target = ts.target
 			EnemyMinions:update()
+			Checks()
 	end
 	OW:EnableAttacks()
 	
