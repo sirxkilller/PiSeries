@@ -22,7 +22,7 @@ if not sourceLibFound then return end
 
 
 if autoUpdate then
-    SourceUpdater(scriptName, version, "raw.githubusercontent.com", "TheRealSource/public/master/common/SourceLib.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
+    SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/public/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
 end
 
 

@@ -1,11 +1,9 @@
 PiSeries
 ========
-Requring VPrediction and SOW , download it here ! 
-========
-Download : https://github.com/Hellsing/BoL/tree/master/common
+No Libs required.
 
 Current Scripts:
-- PiJax
+- PiAhri
 
 
 Simple and Light Scripts. 100% selfmade, 100% working.
