@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = 1.03
+local version = 1.05
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -77,7 +77,6 @@ function PiSet()
         		table.insert(ToInterrupt, champ.spellName)
         	end
         end
-    end
 	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGICAL)
 	ts.name = "Ahri"
 	menu:addTS(ts)
@@ -262,20 +261,28 @@ function countminionshitQ(pos)
 end
 
 
-function CastQ(Target)
-		local targets = {[E] = STS:GetTarget(spells[E].range) }				  
+function CastQ(Target)		  
 		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellQ.Delay, SpellQ.Width, SpellQ.Range, SpellQ.Speed, myHero, false)
 		if HitChance >= menu.extra.chanceQ then
 		CastSpell(_Q, CastPosition.x, CastPosition.z)
 	end
 end
 
-function CastE(Target)
-		local targets = { [Q] = STS:GetTarget(spells[Q].range) }		  
+function CastE(Target)	  
 		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellE.Delay, SpellE.Width, SpellE.Range, SpellE.Speed, myHero, true)
 		if HitChance >= menu.extra.chanceE then
 		CastSpell(_E, CastPosition.x, CastPosition.z)
 		
+	end
+end
+
+function OnProcessSpell(unit, spell)
+	if #ToInterrupt > 0 and menu.extra.interrupt and EReady then
+		for _, ability in pairs(ToInterrupt) do
+			if spell.name == ability and unit.team ~= myHero.team and GetDistance(unit) < SpellE.Range then
+				CastSpell(_E, unit.x, unit.z)
+			end
+		end
 	end
 end
 
