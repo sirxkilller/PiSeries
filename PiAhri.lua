@@ -1,13 +1,12 @@
 -- PiAhri - simple as f***
 
-local version = "1.10"
+local version = "1.11"
 local AUTOUPDATE = true
 local silentUpdate = false
 
 if myHero.charName ~= "Ahri" then return end
 
 require 'VPrediction'
-require 'SOW'
 
 local UPDATE_NAME = "PiAhri"
 local UPDATE_HOST = "raw.github.com"
@@ -37,7 +36,6 @@ if AUTOUPDATE then
 end
 
 local VP   = nil
-local OW   = nil
 local menu = nil
 local target = nil
 local PiSetUp = false
@@ -74,10 +72,6 @@ local SpellW = {Speed = nil, Range = 800, Delay = 0.250, Width = nil}
 function setupMenu()
 
 	menu = scriptConfig("PiAhri", "PiAhri")
-
-	menu:addSubMenu("Orbwalking", "orbwalking")
-		OW:LoadToMenu(menu.orbwalking)
-
 
 	menu:addSubMenu("Combo", "combo")
 		menu.combo:addParam("active", "Combo active" , SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -120,7 +114,6 @@ end
 function OnLoad()
 	
 	VP = VPrediction()
-	OW = SOW(VP)
 	setupMenu()
 	PiSet()
 
@@ -159,7 +152,6 @@ function OnTick()
 			EnemyMinions:update()
 			Checks()
 	end
-	OW:EnableAttacks()
 	
 end
 
@@ -167,9 +159,6 @@ end
 function combo()
 
 	if menu.combo.active then
-		OW:DisableAttacks()
-
-
 		-- E
 		if target and menu.combo.useE and EReady and not isCharmed(target) then 
 		CastE(target)
@@ -190,10 +179,6 @@ function combo()
 			if GetDistance(target) <= SpellW.Range then
 				CastSpell(_W)
 			end
-		end
-
-		if not QReady and not WReady and not EReady then
-			OW:EnableAttacks()
 		end
 	end
 end
