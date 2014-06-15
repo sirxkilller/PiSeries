@@ -22,7 +22,7 @@ if not sourceLibFound then return end
 
 
 if autoUpdate then
-    SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/public/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
+    SourceUpdater(scriptName, version, "raw.githubusercontent.com", "/RankedFire/PiSeries/master/PiAhri.lua", SCRIPT_PATH .. GetCurrentEnv().FILE_NAME):SetSilent(silentUpdate):CheckUpdate()
 end
 
 
@@ -220,7 +220,7 @@ function harass()
 	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
 	local targets = { [Q] = STS:GetTarget(spells[Q].range) 
-					 ,[W] = STS:GetTarget(spells[W].range), 
+					 ,[W] = STS:GetTarget(spells[W].range) 
 					 ,[E] = STS:GetTarget(spells[E].range) }
 
 
