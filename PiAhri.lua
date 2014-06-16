@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.16"
+local version = "1.17"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -214,20 +214,20 @@ function harass()
 end
 
 function Farm()
-	if menu.farm.active then
-		if menu.farm.useQ then
-			FarmQ()
+    EnemyMinion:update()
+    if myHero.mana/myHero.maxMana * 100 > Menu.Farm.Mana and ValidTarget(EnemyMinion.objects[1],Spell.Q.range) then
+        if QREADY and Menu.Farm.Q then
+        local qDmg = getDmg("Q",EnemyMinion.objects[1],myHero)
+        if qDmg > EnemyMinion.objects[1].health then
+        Packets(_Q,EnemyMinion.objects[1])
+			end
 		end
-	end
+    end
 end
+		   
 
-function FarmQ()
-	if QReady and #EnemyMinions.objects > 0 then
-		local QPos = GetBestQPositionFarm()
-		if QPos then
-			CastSpell(_Q, QPos.x, QPos.z)
-		end
-	end
+function Packets(spellSlot,castPosition)
+    Packet("S_CAST", {spellId = spellSlot, fromX = castPosition.x, fromY = castPosition.z, toX = castPosition.x, toY = castPosition.z}):send()
 end
 
 function KillSteal()
@@ -246,39 +246,6 @@ function KillSteal()
 	end
 end
 	IgniteKS()
-end
-
-function GetBestQPositionFarm()
-	local MaxQ = 0 
-	local MaxQPos 
-	for i, minion in pairs(EnemyMinions.objects) do
-		local hitQ = countminionshitQ(minion)
-		if hitQ ~= nil and hitQ > MaxQ or MaxQPos == nil then
-			MaxQPos = minion
-			MaxQ = hitQ
-		end
-	end
-
-	if MaxQPos then
-		local CastPosition = MaxQPos
-		return CastPosition
-	else
-		return nil
-	end
-end
-
-function countminionshitQ(pos)
-	local n = 0
-	local ExtendedVector = Vector(myHero) + Vector(Vector(pos) - Vector(myHero)):normalized()*SpellQ.Range
-	local EndPoint = Vector(myHero) + ExtendedVector
-	for i, minion in ipairs(EnemyMinions.objects) do
-		local MinionPointSegment, MinionPointLine, MinionIsOnSegment =  VectorPointProjectionOnLineSegment(Vector(myHero), Vector(EndPoint), Vector(minion)) 
-		local MinionPointSegment3D = {x=MinionPointSegment.x, y=pos.y, z=MinionPointSegment.y}
-		if MinionIsOnSegment and GetDistance(MinionPointSegment3D, pos) < SpellQ.Width then
-			n = n +1
-		end
-	end
-	return n
 end
 
 
