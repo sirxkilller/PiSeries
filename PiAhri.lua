@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.17"
+local version = "1.18"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -154,7 +154,7 @@ function OnTick()
 	if PiSetUp then
 			AddTickCallback(combo)
 			AddTickCallback(harass)
-			AddTickCallback(farm)
+			if menu.farm.active then Farm() end
 			AddTickCallback(KS)
 			ts:update()
 			KillSteal()
@@ -214,16 +214,15 @@ function harass()
 end
 
 function Farm()
-    EnemyMinion:update()
-    if myHero.mana/myHero.maxMana * 100 > Menu.Farm.Mana and ValidTarget(EnemyMinion.objects[1],Spell.Q.range) then
-        if QREADY and Menu.Farm.Q then
-        local qDmg = getDmg("Q",EnemyMinion.objects[1],myHero)
-        if qDmg > EnemyMinion.objects[1].health then
-        Packets(_Q,EnemyMinion.objects[1])
-			end
+	if menu.farm.active then
+		EnemyMinion:update()
+		if QReady and menu.farm.useQ then
+		local qDmg = getDmg("Q",EnemyMinion.objects[1],myHero)
+		if qDmg > EnemyMinion.objects[1].health then
+		Packets(_Q,EnemyMinion.objects[1])
 		end
-    end
-end
+	end
+ end
 		   
 
 function Packets(spellSlot,castPosition)
@@ -234,7 +233,7 @@ function KillSteal()
 	if menu.KS.active then
 		local Enemies = GetEnemyHeroes()
 		for i, enemy in pairs(Enemies) do
-			if ValidTarget(enemy, 1000) and not enemy.dead and GetDistance(enemy) < 1000 then
+			if ValidTarget(enemy, 900) and not enemy.dead and GetDistance(enemy) < 900 and QReady or EReady then
 				if getDmg("Q", enemy, myHero) > enemy.health and GetDistance(enemy) < SpellQ.Range and menu.KS.useQ then
 					CastQ(enemy)
 				end
