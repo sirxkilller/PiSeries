@@ -7,6 +7,7 @@ local silentUpdate = false
 if myHero.charName ~= "Ahri" then return end
 
 require 'VPrediction'
+require 'SOW'
 
 local UPDATE_NAME = "PiAhri"
 local UPDATE_HOST = "raw.github.com"
@@ -36,6 +37,7 @@ if AUTOUPDATE then
 end
 
 local VP   = nil
+local SOW  = nil
 local menu = nil
 local target = nil
 local PiSetUp = false
@@ -114,6 +116,7 @@ end
 function OnLoad()
 	
 	VP = VPrediction()
+	SOW(VP)
 	setupMenu()
 	PiSet()
 
@@ -145,7 +148,7 @@ end
 
 
 function OnTick()
-
+	SOW:EnableAttacks()
 	if PiSetUp then
 			AddTickCallback(combo)
 			AddTickCallback(harass)
@@ -163,6 +166,7 @@ end
 function combo()
 
 	if menu.combo.active then
+	SOW:DisableAttacks()
 		-- E
 		if target and menu.combo.useE and EReady and not isCharmed(target) then 
 		CastE(target)
@@ -183,6 +187,9 @@ function combo()
 			if GetDistance(target) <= SpellW.Range then
 				CastSpell(_W)
 			end
+		end
+		if not EReady and not QReady then
+			SOW:EnableAttacks()
 		end
 	end
 end
