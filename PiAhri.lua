@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.18"
+local version = "1.19"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -215,12 +215,13 @@ end
 
 function Farm()
 	if menu.farm.active then
-		EnemyMinion:update()
-		if QReady and menu.farm.useQ then
-		local qDmg = getDmg("Q",EnemyMinion.objects[1],myHero)
-		if qDmg > EnemyMinion.objects[1].health then
-		Packets(_Q,EnemyMinion.objects[1])
-		end
+			EnemyMinion:update()
+			if QReady and menu.farm.useQ then
+			local qDmg = getDmg("Q",EnemyMinion.objects[1],myHero)
+			if qDmg > EnemyMinion.objects[1].health then
+			Packets(_Q,EnemyMinion.objects[1])
+			end
+		end	
 	end
  end
 		   
