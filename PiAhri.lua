@@ -120,6 +120,7 @@ function OnLoad()
 end
 
 function PiSet()
+		local hero = heroManager:GetHero(i)
         for _, champ in pairs(InterruptList) do
         	if hero.charName == champ.charName then
         		table.insert(ToInterrupt, champ.spellName)
