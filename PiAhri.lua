@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.15"
+local version = "1.16"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -93,9 +93,15 @@ function setupMenu()
 		menu.harass:addParam("useE",      "Use E",                    SCRIPT_PARAM_ONOFF,     false)
 
 	menu:addSubMenu("Farm", "farm")
-		menu.farm:addParam("active", "Farm",          				 	SCRIPT_PARAM_ONOFF, true)
+		menu.farm:addParam("active", "Farm",          				 	SCRIPT_PARAM_ONKEYDOWN, false, string.byte("V"))
 		menu.farm:addParam("sep",     "",                          		SCRIPT_PARAM_INFO,  "")
 		menu.farm:addParam("useQ", "Q",           						SCRIPT_PARAM_ONOFF, true)
+		
+	menu:addSubMenu("Killsteal", "KS")
+		menu.KS:addParam("active", "Turn KS on",          				 	SCRIPT_PARAM_ONOFF, true)
+		menu.KS:addParam("sep",     "",                          			SCRIPT_PARAM_INFO,  "")
+		menu.KS:addParam("useQ", "Use Q",           						SCRIPT_PARAM_ONOFF, true)
+		menu.KS:addParam("useE", "Use E",           						SCRIPT_PARAM_ONOFF, true)
 		
 	menu:addSubMenu("Extra", "extra")
 		menu.extra:addParam("charm",   "Try to Charm with E first",          				 SCRIPT_PARAM_ONOFF, true)
@@ -112,6 +118,7 @@ function setupMenu()
 
 	menu.combo:permaShow("active")
 	menu.harass:permaShow("active")
+	menu.KS:permaShow("active")
 	
 end
 
@@ -148,6 +155,7 @@ function OnTick()
 			AddTickCallback(combo)
 			AddTickCallback(harass)
 			AddTickCallback(farm)
+			AddTickCallback(KS)
 			ts:update()
 			KillSteal()
 			target = ts.target
@@ -222,6 +230,24 @@ function FarmQ()
 	end
 end
 
+function KillSteal()
+	if menu.KS.active then
+		local Enemies = GetEnemyHeroes()
+		for i, enemy in pairs(Enemies) do
+			if ValidTarget(enemy, 1000) and not enemy.dead and GetDistance(enemy) < 1000 then
+				if getDmg("Q", enemy, myHero) > enemy.health and GetDistance(enemy) < SpellQ.Range and menu.KS.useQ then
+					CastQ(enemy)
+				end
+
+			if getDmg("E", enemy, myHero) > enemy.health and GetDistance(enemy) < SpellE.Range and menu.KS.useE then
+				CastE(enemy)
+			end
+		end
+	end
+end
+	IgniteKS()
+end
+
 function GetBestQPositionFarm()
 	local MaxQ = 0 
 	local MaxQPos 
@@ -271,6 +297,19 @@ function CastE(Target)
 	end
 end
 
+function IgniteKS()
+	if igniteReady then
+		local Enemies = GetEnemyHeroes()
+		for idx,val in ipairs(Enemies) do
+			if ValidTarget(val, 600) then
+                if getDmg("IGNITE", val, myHero) > val.health and GetDistance(val) <= 600 then
+                        CastSpell(ignite, val)
+                end
+			end
+		end
+	end
+end
+
 function OnProcessSpell(unit, spell)
 	if #ToInterrupt > 0 and menu.extra.interrupt and EReady then
 		for _, ability in pairs(ToInterrupt) do
@@ -301,6 +340,14 @@ function Checks()
 	WReady = (myHero:CanUseSpell(_W) == READY)
 	EReady = (myHero:CanUseSpell(_E) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
+	
+	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
+            ignite = SUMMONER_1
+    elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then
+            ignite = SUMMONER_2
+    end
+    igniteReady = (ignite ~= nil and myHero:CanUseSpell(ignite) == READY)
+	
 end
 
 
