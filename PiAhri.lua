@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.14"
+local version = "1.15"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -37,7 +37,6 @@ if AUTOUPDATE then
 end
 
 local VP   = nil
-local SOW  = nil
 local menu = nil
 local target = nil
 local PiSetUp = false
@@ -76,7 +75,7 @@ function setupMenu()
 	menu = scriptConfig("PiAhri", "PiAhri")
 
 	menu:addSubMenu("Orbwalking", "orbwalking")
-		SOW:LoadToMenu(menu.orbwalking)
+		OW:LoadToMenu(menu.orbwalking)
 	
 	menu:addSubMenu("Combo", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
@@ -119,7 +118,7 @@ end
 function OnLoad()
 	
 	VP = VPrediction()
-	SOW(VP)
+	OW = SOW(VP)
 	setupMenu()
 	PiSet()
 
@@ -143,15 +142,8 @@ function PiSet()
     PiSetUp = true
 end
 
-function GetCustomTarget()
-    if _G.MMA_Target and _G.MMA_Target.type == myHero.type then return _G.MMA_Target end
-    if _G.AutoCarry and _G.AutoCarry.Crosshair and _G.AutoCarry.Attack_Crosshair and _G.AutoCarry.Attack_Crosshair.target and _G.AutoCarry.Attack_Crosshair.target.type == myHero.type then return _G.AutoCarry.Attack_Crosshair.target end
-    return ts.target
-end
-
-
 function OnTick()
-	SOW:EnableAttacks()
+	OW:EnableAttacks()
 	if PiSetUp then
 			AddTickCallback(combo)
 			AddTickCallback(harass)
@@ -159,6 +151,7 @@ function OnTick()
 			ts:update()
 			KillSteal()
 			target = ts.target
+			OW:ForceTarget(target)
 			EnemyMinions:update()
 			Checks()
 	end
@@ -169,7 +162,7 @@ end
 function combo()
 
 	if menu.combo.active then
-	SOW:DisableAttacks()
+	OW:DisableAttacks()
 		-- E
 		if target and menu.combo.useE and EReady and not isCharmed(target) then 
 		CastE(target)
@@ -192,7 +185,7 @@ function combo()
 			end
 		end
 		if not EReady and not QReady then
-			SOW:EnableAttacks()
+			OW:EnableAttacks()
 		end
 	end
 end
