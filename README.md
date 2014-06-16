@@ -1,9 +1,9 @@
 PiSeries
 ========
-No Libs required.
+Libs required are in my Common folder.
 
 Current Scripts:
 - PiAhri
 
 
-Simple and Light Scripts. 100% selfmade, 100% working.
+Simple and Light Scripts.

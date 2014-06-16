@@ -1,8 +1,7 @@
 -- PiAhri - simple as f***
 
-local version = "1.20"
+local version = "1.00"
 local AUTOUPDATE = true
-local silentUpdate = false
 
 if myHero.charName ~= "Ahri" then return end
 
