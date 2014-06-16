@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.11"
+local version = "1.12"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -74,7 +74,7 @@ function setupMenu()
 	menu = scriptConfig("PiAhri", "PiAhri")
 
 	menu:addSubMenu("Combo", "combo")
-		menu.combo:addParam("active", "Combo active" , SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
 		menu.combo:addParam("useQ",   "Use Q",         SCRIPT_PARAM_ONOFF,     true)
 		menu.combo:addParam("useW",   "Use W",         SCRIPT_PARAM_ONOFF,     true)
@@ -101,7 +101,7 @@ function setupMenu()
 		menu.extra:addParam("chanceE", "Hitchance for E",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 
 	menu:addSubMenu("Drawings", "Draw")
-		menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+		--menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawW", "Draw W", SCRIPT_PARAM_ONOFF, false)
 		menu.Draw:addParam("DrawE", "Draw E", SCRIPT_PARAM_ONOFF, true)
@@ -109,6 +109,7 @@ function setupMenu()
 
 	menu.combo:permaShow("active")
 	menu.harass:permaShow("active")
+	
 end
 
 function OnLoad()
@@ -298,12 +299,13 @@ end
 
 
 function OnDraw()
+--[[
 	if menu.Draw.DrawTarget then
 		if target ~= nil then
 			DrawCircle3D(target.x, target.y, target.z, VP:GetHitBox(target), 1, ARGB(255, 255, 0, 0))
 		end
 	end
-
+--]]
 	if menu.Draw.DrawQ then
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
 	end
