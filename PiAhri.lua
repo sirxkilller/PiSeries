@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.12"
+local version = "1.13"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -89,10 +89,9 @@ function setupMenu()
 		menu.harass:addParam("useE",      "Use E",                    SCRIPT_PARAM_ONOFF,     false)
 
 	menu:addSubMenu("Farm", "farm")
-		menu.extra:addParam("active", "Farm",          				 	SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("sep",     "",                          	SCRIPT_PARAM_INFO,  "")
-		menu.extra:addParam("useQ", "Q",           						SCRIPT_PARAM_ONOFF, true)
-		menu.extra:addParam("useW", "W",           						SCRIPT_PARAM_ONOFF, true)
+		menu.farm:addParam("active", "Farm",          				 	SCRIPT_PARAM_ONOFF, true)
+		menu.farm:addParam("sep",     "",                          		SCRIPT_PARAM_INFO,  "")
+		menu.farm:addParam("useQ", "Q",           						SCRIPT_PARAM_ONOFF, true)
 		
 	menu:addSubMenu("Extra", "extra")
 		menu.extra:addParam("charm",   "Try to Charm with E first",          				 SCRIPT_PARAM_ONOFF, true)
@@ -101,7 +100,7 @@ function setupMenu()
 		menu.extra:addParam("chanceE", "Hitchance for E",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
 
 	menu:addSubMenu("Drawings", "Draw")
-		--menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawW", "Draw W", SCRIPT_PARAM_ONOFF, false)
 		menu.Draw:addParam("DrawE", "Draw E", SCRIPT_PARAM_ONOFF, true)
@@ -147,6 +146,7 @@ function OnTick()
 	if PiSetUp then
 			AddTickCallback(combo)
 			AddTickCallback(harass)
+			AddTickCallback(farm)
 			ts:update()
 			KillSteal()
 			target = ts.target
@@ -299,13 +299,13 @@ end
 
 
 function OnDraw()
---[[
+
 	if menu.Draw.DrawTarget then
 		if target ~= nil then
 			DrawCircle3D(target.x, target.y, target.z, VP:GetHitBox(target), 1, ARGB(255, 255, 0, 0))
 		end
 	end
---]]
+
 	if menu.Draw.DrawQ then
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
 	end
