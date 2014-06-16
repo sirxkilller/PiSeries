@@ -120,12 +120,14 @@ function OnLoad()
 end
 
 function PiSet()
+		 for i = 1, heroManager.iCount do
 		local hero = heroManager:GetHero(i)
         for _, champ in pairs(InterruptList) do
         	if hero.charName == champ.charName then
         		table.insert(ToInterrupt, champ.spellName)
         	end
         end
+	end
 	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 950, DAMAGE_MAGICAL)
 	ts.name = "Ahri"
 	menu:addTS(ts)
