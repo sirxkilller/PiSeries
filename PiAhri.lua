@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.13"
+local version = "1.14"
 local AUTOUPDATE = true
 local silentUpdate = false
 
@@ -75,6 +75,9 @@ function setupMenu()
 
 	menu = scriptConfig("PiAhri", "PiAhri")
 
+	menu:addSubMenu("Orbwalking", "orbwalking")
+		SOW:LoadToMenu(menu.orbwalking)
+	
 	menu:addSubMenu("Combo", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
