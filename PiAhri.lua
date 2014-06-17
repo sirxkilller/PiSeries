@@ -1,6 +1,6 @@
 -- PiAhri - simple as f***
 
-local version = "1.00"
+local version = "1.01"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Ahri" then return end
@@ -101,6 +101,7 @@ function setupMenu()
 		menu.KS:addParam("sep",     "",                          			SCRIPT_PARAM_INFO,  "")
 		menu.KS:addParam("useQ", "Use Q",           						SCRIPT_PARAM_ONOFF, true)
 		menu.KS:addParam("useE", "Use E",           						SCRIPT_PARAM_ONOFF, true)
+		menu.KS:addParam("useIG", "Use IGNITE",           					SCRIPT_PARAM_ONOFF, true)
 		
 	menu:addSubMenu("Extra", "extra")
 		menu.extra:addParam("charm",   "Try to Charm with E first",          				 SCRIPT_PARAM_ONOFF, true)
@@ -151,8 +152,8 @@ end
 function OnTick()
 	OW:EnableAttacks()
 	if PiSetUp then
-			AddTickCallback(combo)
-			AddTickCallback(harass)
+			if menu.harass.active then harass() end
+			if menu.combo.active then combo() end
 			if menu.farm.active then Farm() end
 			AddTickCallback(KS)
 			ts:update()
@@ -165,61 +166,70 @@ function OnTick()
 	
 end
 
-
+-- warn hier.
 function combo()
 
-	if menu.combo.active then
 	OW:DisableAttacks()
 		-- E
-		if target and menu.combo.useE and EReady and not isCharmed(target) then 
+	if target and menu.combo.useE and EReady and not isCharmed(target) then 
 		CastE(target)
-		end
+	end
 
 		-- Q
-		if target and menu.combo.useQ and QReady and (isCharmed(target) or not menu.extra.charm or not EReady) and (not menu.combo.useE) then 
-		CastQ(target)
+	if target and menu.combo.useQ then
+		if QReady then 
+			if isCharmed(target) and menu.extra.charm then
+				CastQ(target)
+			elseif not isCharmed(target) or not menu.extra.charm or not EReady or not menu.combo.useE then
+				CastQ(target)
+			end
 		end
+	end
 
 		-- W
-		if target and menu.combo.useW and WReady and (isCharmed(target) or not menu.extra.charm) and (EReady or not menu.combo.useE) and GetDistance(target) <= WRange then CastSpell(_W) end
-
-		-- Combo
-		if menu.combo.useE and target and menu.combo.useQ  and menu.combo.useW and EReady and QReady and WReady then
-			CastE(target)
-			CastQ(target)
-			if GetDistance(target) <= SpellW.Range then
+	if target and menu.combo.useW then
+		if WReady and GetDistance(target) < SpellW.Range then 
+			if isCharmed(target) and menu.extra.charm then
+				CastSpell(_W)
+			elseif not isCharmed(target) or not menu.extra.charm or not EReady or not menu.combo.useE then
 				CastSpell(_W)
 			end
 		end
-		if not EReady and not QReady then
-			OW:EnableAttacks()
+	end
+	--[[
+	if menu.combo.useE and target and menu.combo.useQ  and menu.combo.useW and EReady and QReady and WReady then
+		CastE(target)
+		CastQ(target)
+		if GetDistance(target) <= SpellW.Range then
+			CastSpell(_W)
 		end
+	end
+	--]]
+	if not EReady or not QReady then
+		OW:EnableAttacks()
 	end
 end
 
 
 function harass()
-	if menu.harass.active then
-		if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-		if target and QReady and menu.harass.useQ then
-			CastQ(target)
-		end
+	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-		if target and WReady and menu.harass.useW then
-			CastE(target)
-		end
+	if target and QReady and menu.harass.useQ then
+		CastQ(target)
+	end
+
+	if target and WReady and menu.harass.useW then
+		CastE(target)	
 	end
 end
 
 function Farm()
-	if menu.farm.active then
-			EnemyMinions:update()
-			if QReady and menu.farm.useQ then
-			local qDmg = getDmg("Q",EnemyMinions.objects[1],myHero)
-			if qDmg > EnemyMinions.objects[1].health then
-			Packets(_Q,EnemyMinions.objects[1])
-			end
+		EnemyMinions:update()
+		if QReady and menu.farm.useQ then
+		local qDmg = getDmg("Q",EnemyMinions.objects[1],myHero)
+		if qDmg > EnemyMinions.objects[1].health then
+		Packets(_Q,EnemyMinions.objects[1])	
 		end	
 	end
  end
@@ -264,12 +274,14 @@ function CastE(Target)
 end
 
 function IgniteKS()
-	if igniteReady then
-		local Enemies = GetEnemyHeroes()
-		for idx,val in ipairs(Enemies) do
-			if ValidTarget(val, 600) then
-                if getDmg("IGNITE", val, myHero) > val.health and GetDistance(val) <= 600 then
+	if menu.KS.useIG then
+		if igniteReady then
+			local Enemies = GetEnemyHeroes()
+			for idx,val in ipairs(Enemies) do
+				if ValidTarget(val, 600) then
+					if getDmg("IGNITE", val, myHero) > val.health and GetDistance(val) <= 600 then
                         CastSpell(ignite, val)
+					end
                 end
 			end
 		end
@@ -286,19 +298,14 @@ function OnProcessSpell(unit, spell)
 	end
 end
 
-function HasBuff(unit, buffname)
-    for i = 1, unit.buffCount do
-        local tBuff = unit:getBuff(i)
-        if tBuff.valid and BuffIsValid(tBuff) and tBuff.name == buffname then
+function isCharmed(target)
+    for i = 1, target.buffCount do
+        local tBuff = target:getBuff(i)
+        if tBuff.valid and BuffIsValid(tBuff) and tBuff.name == CHARM_NAME then
             return true
         end
     end
     return false
-end
-
-
-function isCharmed(target)
-	return HasBuff(target, CHARM_NAME)
 end
 
 function Checks()
