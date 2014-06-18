@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.10"
+local version = "1.11"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -210,7 +210,9 @@ function combo()
 			CastE(target)
 		elseif menu.combo.useQ2 then
 			CastQ(target)
+			end
 		end
+	end
 	if not QReady and notisCougar then OW:EnableAttacks() end
 end
 
