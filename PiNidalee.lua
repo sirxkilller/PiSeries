@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.06"
+local version = "1.07"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -158,7 +158,6 @@ function PiSet()
 			ProdictQ:CanNotMissMode(true, hero)
 		end
 	end
-end
     print('PiNidalee ' .. tostring(version) .. ' loaded!')
     PiSetUp = true
 end
