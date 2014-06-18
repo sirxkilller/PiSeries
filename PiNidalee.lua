@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.18"
+local version = "1.20"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -174,6 +174,7 @@ function OnTick()
 		OW:ForceTarget(target)
 		EnemyMinions:update()
 		Checks()
+		if menu.pred.VPrediction == true then menu.pred.Prodiction == false elseif menu.pred.Prodiction == true then menu.pred.VPrediction == false end
 		if notisCougar and Ally ~= nil then
 			if menu.Heal.Auto then
 				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
@@ -197,19 +198,17 @@ function combo()
 	
 	if notisCougar and target and QReady and menu.combo.useQ then
 		CastQ(target)
-	elseif not notisCougar and target and QReady then
+	elseif not notisCougar and target then
 		if Facing(m,target,200) then
 			CastW(target)
-		if menu.combo.useE and menu.combo.useQ2 then
+		if menu.combo.useE then
 			CastE(target)
-			CastQ(target)
-		elseif menu.combo.useE then
-			CastE(target)
-		elseif menu.combo.useQ2 then
+		if menu.combo.useQ2 then
 			CastQ(target)
 			end
 		end
 	end
+end
 	if not QReady and notisCougar then OW:EnableAttacks() end
 end
 
@@ -266,6 +265,7 @@ end
 	function NearMouseAlly(range)
 		for i = 1, heroManager.iCount do
 			hero = heroManager:GetHero(i)
+		if heroTarget == nil then return end
 			if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
 				if heroTarget == nil then
 					heroTarget = hero
@@ -273,6 +273,7 @@ end
 					heroTarget = hero
 				end
 			end
+		end
 		end
 		return heroTarget
 	end
