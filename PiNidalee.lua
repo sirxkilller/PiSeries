@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.07"
+local version = "1.08"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -165,32 +165,31 @@ end
 function OnTick()
 	OW:EnableAttacks()
 	if PiSetUp then
-			if menu.harass.active then harass() end
-			if menu.combo.active then combo() end
-			if menu.farm.active then Farm() end
-			AddTickCallback(KS)
-			ts:update()
-			KillSteal()
-			target = ts.target
-			if target ~= nil then ProdictQ:EnableTarget(target, true) end
-			friend = GrabAlly(SpellE.Range)
-			OW:ForceTarget(target)
-			EnemyMinions:update()
-			Checks()
-			if notisCougar and Ally ~= nil then
-				if menu.Heal.Auto then
-					if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
-						CastSpell(_E,Ally)
-					end
-				end
-				if menu.General.Heal then
-					if (myHero.mana/myHero.maxMana * 100 > menu.Heal.MMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.MHealth) then
-						CastSpell(_E,Ally)
-					end
+		if menu.harass.active then harass() end
+		if menu.combo.active then combo() end
+		if menu.farm.active then Farm() end
+		AddTickCallback(KS)
+		ts:update()
+		KillSteal()
+		target = ts.target
+		if target ~= nil then ProdictQ:EnableTarget(target, true) end
+		friend = GrabAlly(SpellE.Range)
+		OW:ForceTarget(target)
+		EnemyMinions:update()
+		Checks()
+		if notisCougar and Ally ~= nil then
+			if menu.Heal.Auto then
+				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
+					CastSpell(_E,Ally)
 				end
 			end
-		end		
-	end
+			if menu.General.Heal then
+				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.MMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.MHealth) then
+					CastSpell(_E,Ally)
+				end
+			end
+		end
+	end		
 end
 
 function combo()
