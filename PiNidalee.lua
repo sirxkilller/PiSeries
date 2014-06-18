@@ -1,15 +1,15 @@
 -- PiNidalee - simple as f***
 
-local version = "1.15"
+local version = "1.16"
 local AUTOUPDATE = true
-print("test")
+
 if myHero.charName ~= "Nidalee" then return end
 
 require 'VPrediction'
 require 'Prodiction'
 require 'Collision'
 require 'SOW'
-print("test2")
+
 local UPDATE_NAME = "PiNidalee"
 local UPDATE_HOST = "raw.github.com"
 local UPDATE_PATH = "/RankedFire/PiSeries/master/PiNidalee.lua".."?rand="..math.random(1,10000)
@@ -36,7 +36,7 @@ if AUTOUPDATE then
 		AutoupdaterMsg("Error downloading version info")
 	end
 end
-print("test3")
+
 local VP   = nil
 local menu = nil
 local target = nil
@@ -116,7 +116,7 @@ end
 	menu.KS:permaShow("active")
 	
 end
-print("test4")
+
 function OnLoad()
 	
 	VP = VPrediction()
@@ -132,7 +132,7 @@ function notisCougar()
 	
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
 		SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
-		SpellW = {Range = 900, Delay = 0.90}
+		SpellW = {Range = 900, Delay = 0.90},
 		return true
 	else
 		SpellQ = {Range = couRange},
