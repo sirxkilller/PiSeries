@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.21"
+local version = "1.22"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -174,9 +174,9 @@ function OnTick()
 		OW:ForceTarget(target)
 		EnemyMinions:update()
 		Checks()
-		if menu.pred.VPrediction == true then 
+		if menu.pred.VPrediction then 
 			menu.pred.Prodiction == false 
-		elseif menu.pred.Prodiction == true then 
+		elseif menu.pred.Prodiction then 
 			menu.pred.VPrediction == false 
 		end
 		
