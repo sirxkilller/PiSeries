@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.11"
+local version = "1.12"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -49,18 +49,18 @@ local ignite, igniteReady = nil, false
 
 function setupMenu()
 
-	menu = scriptConfig("PiAhri", "PiAhri")
+	menu = scriptConfig("PiNidalee", "PiNidalee")
 
 	menu:addSubMenu("Orbwalking", "orbwalking")
 		OW:LoadToMenu(menu.orbwalking)
 	
 	menu:addSubMenu("Prediction","pred")
-		menu.combo:addParam("VPrediction","VPrediction",SCRIPT_PARAM_ONOFF, true)
-		menu.combo:addParam("Prodiction","PROdiction",SCRIPT_PARAM_ONOFF, true)
+		menu.pred:addParam("VPrediction","VPrediction",SCRIPT_PARAM_ONOFF, true)
+		menu.pred:addParam("Prodiction","PROdiction",SCRIPT_PARAM_ONOFF, true)
 	
 	menu:addSubMenu("Combo and Keybindings", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		menu.combo:addParam("Heal","Heal",2,false,string.byte("A"))
+		menu.combo:addParam("Heal","Heal",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("A"))
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
 		menu.combo:addParam("useQ",   "Use Q - Normal Form",         SCRIPT_PARAM_ONOFF,     true)
 		menu.combo:addParam("useQ2",   "Use Q - Cougar Form",         SCRIPT_PARAM_ONOFF,     true)
@@ -352,16 +352,6 @@ function IgniteKS()
                         CastSpell(ignite, val)
 					end
                 end
-			end
-		end
-	end
-end
-
-function OnProcessSpell(unit, spell)
-	if #ToInterrupt > 0 and menu.extra.interrupt and EReady then
-		for _, ability in pairs(ToInterrupt) do
-			if spell.name == ability and unit.team ~= myHero.team and GetDistance(unit) < SpellE.Range then
-				CastSpell(_E, unit.x, unit.z)
 			end
 		end
 	end
