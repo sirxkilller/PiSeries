@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.14"
+local version = "1.15"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -40,6 +40,9 @@ print("test3")
 local VP   = nil
 local menu = nil
 local target = nil
+local SpellQ = {}
+local SpellW = {}
+local SpellE = {}
 local Prodict = ProdictManager.GetInstance()
 local ProdictQ
 local ProdictQCol
@@ -128,13 +131,13 @@ function notisCougar()
 	local couRange = myHero.range + 50
 	
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
-		local SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
-		local SpellW = {Range = 900, Delay = 0.90}
+		SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
+		SpellW = {Range = 900, Delay = 0.90}
 		return true
 	else
-		local SpellQ = {Range = couRange},
-		local SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200},
-		local SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
+		SpellQ = {Range = couRange},
+		SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200},
+		SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
 		return false
 	end
 end
