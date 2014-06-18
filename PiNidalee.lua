@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.13"
+local version = "1.14"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -128,19 +128,13 @@ function notisCougar()
 	local couRange = myHero.range + 50
 	
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
-	print("test5")
 		local SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
-		print("test67")
 		local SpellW = {Range = 900, Delay = 0.90}
-		print("test67777")
 		return true
 	else
 		local SpellQ = {Range = couRange},
-		print("test677777")
 		local SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200},
-		print("test6777")
 		local SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
-		print("test677")
 		return false
 	end
 end
@@ -167,7 +161,6 @@ function OnTick()
 	if PiSetUp then
 		if menu.harass.active then harass() end
 		if menu.combo.active then combo() end
-		if menu.farm.active then Farm() end
 		AddTickCallback(KS)
 		ts:update()
 		KillSteal()
@@ -293,10 +286,6 @@ end
 		end
 		return heroTarget
 	end
-
-function Packets(spellSlot,castPosition)
-    Packet("S_CAST", {spellId = spellSlot, fromX = castPosition.x, fromY = castPosition.z, toX = castPosition.x, toY = castPosition.z}):send()
-end
 
 function KillSteal()
 	if menu.KS.active then
