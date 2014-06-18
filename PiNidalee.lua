@@ -1,13 +1,13 @@
 -- PiNidalee - simple as f***
 
-local version = "1.03"
+local version = "1.04"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
 
 require 'VPrediction'
 require 'Prodiction'
-require "Collision"
+require 'Collision'
 require 'SOW'
 
 local UPDATE_NAME = "PiNidalee"
