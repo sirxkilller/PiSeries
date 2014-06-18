@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.02"
+local version = "1.03"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -120,22 +120,22 @@ function OnLoad()
 	OW = SOW(VP)
 	setupMenu()
 	PiSet()
-	isCougar()
+	notisCougar()
 
 end
 
-function isCougar()
+function notisCougar()
 	local couRange = myHero.range + 50
 	
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
 		local SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
 		local SpellW = {Range = 900, Delay = 0.90}
-		return false
-	else
-		local SpellQ = {range = couRange},
-		local SpellW = {range = 450, speed = math.huge, delay = 0.275, width = 200},
-		local SpellE = {range = 400, speed = math.huge, delay = 0.25, width = 250}
 		return true
+	else
+		local SpellQ = {Range = couRange},
+		local SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200},
+		local SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
+		return false
 	end
 end
 
@@ -172,7 +172,7 @@ function OnTick()
 			OW:ForceTarget(target)
 			EnemyMinions:update()
 			Checks()
-			if not isCougar and Ally ~= nil then
+			if notisCougar and Ally ~= nil then
 				if menu.Heal.Auto then
 					if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
 						CastSpell(_E,Ally)
@@ -192,11 +192,11 @@ function combo()
 
 	OW:DisableAttacks()
 	local m = myHero
-	if isCougar then OW:EnableAttacks() end
+	if not notisCougar then OW:EnableAttacks() end
 	
-	if not isCougar and target and QReady and menu.combo.useQ then
+	if notisCougar and target and QReady and menu.combo.useQ then
 		CastQ(target)
-	elseif isCougar and target and QReady then
+	elseif not notisCougar and target and QReady then
 		if Facing(m,target,200) then
 			CastW(target)
 		if menu.combo.useE and menu.combo.useQ2 then
@@ -208,14 +208,14 @@ function combo()
 			CastQ(target)
 		end
 	end
-	if not QReady and not isCougar then OW:EnableAttacks() end
+	if not QReady and notisCougar then OW:EnableAttacks() end
 end
 
 function harass()
 
 	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-	if not isCougar and target and QReady and menu.harass.useQ then
+	if notisCougar and target and QReady and menu.harass.useQ then
 		CastQ(target)
 	end
 end
