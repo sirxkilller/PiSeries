@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.08"
+local version = "1.09"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -206,7 +206,7 @@ function combo()
 		if menu.combo.useE and menu.combo.useQ2 then
 			CastE(target)
 			CastQ(target)
-		elseif menu.combo useE then
+		elseif menu.combo.useE then
 			CastE(target)
 		elseif menu.combo.useQ2 then
 			CastQ(target)
