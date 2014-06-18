@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.01"
+local version = "1.02"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -129,13 +129,12 @@ function isCougar()
 	
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
 		local SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
-		local SpellW = {Speed = nil, Range = 900, Delay = 0.90, Width = nil},
-		local SpellE = {Speed = nil, Range = nil, Delay = nil, Width = nil}
+		local SpellW = {Range = 900, Delay = 0.90}
 		return false
 	else
 		local SpellQ = {range = couRange},
 		local SpellW = {range = 450, speed = math.huge, delay = 0.275, width = 200},
-		local SpellE = {range = 400, speed = math.huge, delay = 0.25, width = 250}}	
+		local SpellE = {range = 400, speed = math.huge, delay = 0.25, width = 250}
 		return true
 	end
 end
