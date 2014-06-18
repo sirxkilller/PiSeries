@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.05"
+local version = "1.06"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -132,12 +132,15 @@ function notisCougar()
 		local SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30},
 		print("test67")
 		local SpellW = {Range = 900, Delay = 0.90}
-		print("test6")
+		print("test67777")
 		return true
 	else
 		local SpellQ = {Range = couRange},
+		print("test677777")
 		local SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200},
+		print("test6777")
 		local SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
+		print("test677")
 		return false
 	end
 end
