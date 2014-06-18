@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.12"
+local version = "1.13"
 local AUTOUPDATE = true
 print("test")
 if myHero.charName ~= "Nidalee" then return end
@@ -73,7 +73,7 @@ function setupMenu()
 		menu.harass:addParam("useQ",      "Use Q",                    SCRIPT_PARAM_ONOFF,     true)
 
 	
-	Menu:addSubMenu("Heal","Heal")
+	menu:addSubMenu("Heal","Heal")
 		menu.Heal:addParam("sep",       "Mode Settings",SCRIPT_PARAM_INFO,"")
 		menu.Heal:addParam("HealA","Heal Mode",7,3,{ "HP MODE", "NEAR MOUSE", "PRIOTIZED MODE"})
 		menu.Heal:addParam("sep",       "Priority Settings",SCRIPT_PARAM_INFO,"")
