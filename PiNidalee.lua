@@ -1,13 +1,12 @@
 -- PiNidalee - simple as f***
 
-local version = "1.22"
+local version = "1.00"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
 
 require 'VPrediction'
 require 'Prodiction'
-require 'Collision'
 require 'SOW'
 
 local UPDATE_NAME = "PiNidalee"
@@ -37,15 +36,13 @@ if AUTOUPDATE then
 	end
 end
 
+local scriptName = "PiNidalee"
 local VP   = nil
 local menu = nil
 local target = nil
 local SpellQ = {}
 local SpellW = {}
 local SpellE = {}
-local Prodict = ProdictManager.GetInstance()
-local ProdictQ
-local ProdictQCol
 local PiSetUp = false
 local EnemyMinions, JungleMinions = nil, nil
 local ignite, igniteReady = nil, false
@@ -58,22 +55,23 @@ function setupMenu()
 		OW:LoadToMenu(menu.orbwalking)
 	
 	menu:addSubMenu("Prediction","pred")
-		menu.pred:addParam("VPrediction","VPrediction",SCRIPT_PARAM_ONOFF, true)
 		menu.pred:addParam("Prodiction","PROdiction",SCRIPT_PARAM_ONOFF, true)
 	
 	menu:addSubMenu("Combo and Keybindings", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
+		menu.combo:addParam("jump","Use W to MousePos (Cougar and Human)",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
 		menu.combo:addParam("Heal","Heal",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("A"))
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
 		menu.combo:addParam("useQ",   "Use Q - Normal Form",         SCRIPT_PARAM_ONOFF,     true)
 		menu.combo:addParam("useQ2",   "Use Q - Cougar Form",         SCRIPT_PARAM_ONOFF,     true)
+		menu.combo:addParam("useW",   "Use W - Cougar Form",         SCRIPT_PARAM_ONOFF,     true)
 		menu.combo:addParam("useE",   "Use E - Cougar Form",         SCRIPT_PARAM_ONOFF,     true)
 
 	menu:addSubMenu("Harass", "harass")
 		menu.harass:addParam("active",    "Harass active" ,           SCRIPT_PARAM_ONKEYDOWN, false, string.byte("C"))
 		menu.harass:addParam("sep",       "",                         SCRIPT_PARAM_INFO,      "")
-		menu.harass:addParam("mana",      "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
 		menu.harass:addParam("useQ",      "Use Q",                    SCRIPT_PARAM_ONOFF,     true)
+		menu.harass:addParam("mana",      "Don't harass if mana < %", SCRIPT_PARAM_SLICE, 0, 0, 100)
 
 	
 	menu:addSubMenu("Heal","Heal")
@@ -81,8 +79,7 @@ function setupMenu()
 		menu.Heal:addParam("HealA","Heal Mode",7,3,{ "HP MODE", "NEAR MOUSE", "PRIOTIZED MODE"})
 		menu.Heal:addParam("sep",       "Priority Settings",SCRIPT_PARAM_INFO,"")
 		menu.Heal:addSubMenu("Ally Priority","Priority")
-		menu.Heal:addParam("sep","Other Options",SCRIPT_PARAM_INFO,"")
-		menu.Heal:addParam("Auto","Auto Heal",1,false)
+		menu.Heal:addParam("Auto","Auto Heal",SCRIPT_PARAM_ONOFF,false)
 		menu.Heal:addParam("sep","Health & Mana Settings",SCRIPT_PARAM_INFO,"")
 		menu.Heal:addParam("AHealth","Minimum Health Percentage to Heal",4,60,0,100,0)
 		menu.Heal:addParam("AMana","Minimum Mana Percentage to Heal",4,60,0,100,0)
@@ -105,20 +102,35 @@ end
 		
 	menu:addSubMenu("Extra", "extra")
 		menu.extra:addParam("chanceQ", "Hitchance for Q",           						 SCRIPT_PARAM_SLICE, 2, 1, 5, 0)
+		menu.extra:addParam("smart", "Smart changing of R",           						 SCRIPT_PARAM_ONOFF, true)
 
 	menu:addSubMenu("Drawings", "Draw")
 		menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawW", "Draw W if Cougar", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawE", "Draw E if Cougar", SCRIPT_PARAM_ONOFF, true)
 
 
 	menu.combo:permaShow("active")
+	menu.combo:permaShow("jump")
+	menu.combo:permaShow("Heal")
+	menu.combo:permaShow("useQ")
+	menu.combo:permaShow("useQ2")
+	menu.combo:permaShow("useW")
+	menu.combo:permaShow("useE")
 	menu.harass:permaShow("active")
 	menu.KS:permaShow("active")
+	menu.extra:permaShow("smart")
+	menu.Draw:permaShow("DrawTarget")
+	menu.Draw:permaShow("DrawQ")
+	menu.Draw:permaShow("DrawW")
+	menu.Draw:permaShow("DrawE")
 	
 end
 
 function OnLoad()
-	
+
+	printMessage = function(message) print("<font color=\"#00A300\"><b>"..scriptName.."</b></font> <font color=\"#FFFFFF\">"..message.."</font>") end
 	VP = VPrediction()
 	OW = SOW(VP)
 	setupMenu()
@@ -129,16 +141,16 @@ end
 
 function notisCougar()
 	local couRange = myHero.range + 50
-	
+
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
-		SpellQ = {Speed = 1600, Range = 1250, Delay = 0.250, Width = 30}
+		SpellQ = {Speed = 1600, Range = 1250, Delay = 0.1, Width = 30}
 		SpellW = {Range = 900, Delay = 0.90}
 		SpellE = {Range = 600}
 		return true
-	else
+	elseif myHero:GetSpellData(_Q).name == "Takedown" then
 		SpellQ = {Range = couRange}
 		SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200}
-		SpellE = {range = 400, Speed = math.huge, Delay = 0.25, Width = 250}
+		SpellE = {range = couRange, Speed = math.huge, Delay = 0.25, Width = 250}
 		return false
 	end
 end
@@ -148,15 +160,7 @@ function PiSet()
 	ts.name = "Nidalee Reworked"
 	menu:addTS(ts)
 	EnemyMinions = minionManager(MINION_ENEMY, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
-	ProdictQ = Prodict:AddProdictionObject(_Q, 1500, 1250, 0.250, 30, myHero, CastQ)
-	ProdictQCol = Collision(1500, 1300, 0.125, 30)
-	for I = 1, heroManager.iCount do
-		local hero = heroManager:GetHero(I)
-		if hero.team ~= myHero.team then
-			ProdictQ:CanNotMissMode(true, hero)
-		end
-	end
-    print('PiNidalee ' .. tostring(version) .. ' loaded!')
+    printMessage('PiNidalee ' .. tostring(version) .. ' loaded!')
     PiSetUp = true
 end
 
@@ -169,59 +173,59 @@ function OnTick()
 		ts:update()
 		KillSteal()
 		target = ts.target
-		if target ~= nil then ProdictQ:EnableTarget(target, true) end
 		friend = GrabAlly(SpellE.Range)
 		OW:ForceTarget(target)
 		EnemyMinions:update()
-		Checks()
-		if menu.pred.VPrediction then 
-			menu.pred.Prodiction == false 
-		elseif menu.pred.Prodiction then 
-			menu.pred.VPrediction == false 
+		notisCougar()
+		Checks()	
+		if menu.combo.jump then 
+			print('test')
+			CastSpell(_W,mousePos.x,mousePos.z) 
 		end
-		
-		if notisCougar and Ally ~= nil then
+		if notisCougar() and Ally ~= nil then
 			if menu.Heal.Auto then
 				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
 					CastSpell(_E,Ally)
 				end
 			end
-			if menu.General.Heal then
-				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.MMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.MHealth) then
-					CastSpell(_E,Ally)
-				end
-			end
-		end
-	end		
-end
-
-function combo()
-
-	OW:DisableAttacks()
-	local m = myHero
-	if not notisCougar then OW:EnableAttacks() end
-	
-	if notisCougar and target and QReady and menu.combo.useQ then
-		CastQ(target)
-	elseif not notisCougar and target then
-		if Facing(m,target,200) then
-			CastW(target)
-		if menu.combo.useE then
-			CastE(target)
-		if menu.combo.useQ2 then
-			CastQ(target)
-			end
+		elseif menu.combo.Heal then
+			CastSpell(_E,myHero)
 		end
 	end
-end
-	if not QReady and notisCougar then OW:EnableAttacks() end
+end		
+
+
+function combo()
+	OW:DisableAttacks()
+	local m = myHero
+	if not notisCougar() then OW:EnableAttacks() end
+	
+	if notisCougar() and target and QReady and menu.combo.useQ then
+		CastQ(target)
+	end
+	if notisCougar() and not QReady and menu.extra.smart and GetDistance(target) <= 200 then CastSpell(_R) end
+	if not notisCougar() and target then
+		if menu.combo.useW then
+			CastW(target)
+		end
+		if menu.combo.useE and target then
+			CastE(target)
+		end
+		if menu.combo.useQ2 and target then
+			CastQ(target)
+		end
+		if not notisCougar() and not EReady and not QReady and not WReady and GetDistance(target) < 1250 and menu.extra.smart then
+			CastSpell(_R)
+		end
+	end
+	if not QReady and notisCougar() then OW:EnableAttacks() end
 end
 
 function harass()
 
 	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-	if notisCougar and target and QReady and menu.harass.useQ then
+	if notisCougar() and target and QReady and menu.harass.useQ then
 		CastQ(target)
 	end
 end
@@ -235,14 +239,6 @@ function Farm()
 		end	
 	end
  end
-
-function Facing(source, target, lineLength)
-	local sourceVector = Vector(source.visionPos.x, source.visionPos.z)
-	local sourcePos = Vector(source.x, source.z)
-	sourceVector = (sourceVector-sourcePos):normalized()
-	sourceVector = sourcePos + (sourceVector*(GetDistance(target, source)))
-	return GetDistanceSqr(target, {x = sourceVector.x, z = sourceVector.y}) <= (lineLength and lineLength^2 or 90000)
-end 
 
 	function GrabAlly(range)
 		if menu.Heal.HealA == 1 then
@@ -279,13 +275,13 @@ end
 				end
 			end
 		end
-		end
 		return heroTarget
 	end
 	
 	function PrioritizedAlly(range)
 		for i = 1, heroManager.iCount do
 			hero = heroManager:GetHero(i)
+			if heroTarget == nil then return end
 			if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
 				if heroTarget == nil then
 					heroTarget = hero
@@ -320,26 +316,32 @@ local function getHitBoxRadius(target)
 end
 
 function CastQ(Target)	
-		if menu.pred.VPrediction then
-			local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellQ.Delay, SpellQ.Width, SpellQ.Range, SpellQ.Speed, myHero, false)
-			if HitChance >= menu.extra.chanceQ then
-			CastSpell(_Q, CastPosition.x, CastPosition.z)
-		end
-		elseif menu.pred.Prodiction then
-			if GetDistance(pos) - getHitBoxRadius(unit)/2 < 1500 and myHero:GetSpellData(_Q).name == "JavelinToss" then
-			local willCollide = ProdictQCol:GetMinionCollision(pos, myHero)
-			if not willCollide then CastSpell(_Q, pos.x, pos.z) end
+	if menu.pred.Prodiction and ValidTarget(Target,SpellQ.Range) then
+		 local pos, info = Prodiction.GetPrediction(Target, SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width)
+		 if pos then
+			CastSpell(_Q, pos.x, pos.z)
 		end
 	end
 end
 
-function CastE(Target)	  
-		local CastPosition, HitChance, Position = VP:GetLineCastPosition(Target, SpellE.Delay, SpellE.Width, SpellE.Range, SpellE.Speed, myHero, true)
-		if HitChance >= menu.extra.chanceE then
-		CastSpell(_E, CastPosition.x, CastPosition.z)
-		
+function CastW(Target)	
+	if menu.pred.Prodiction and ValidTarget(Target,SpellW.Range) then
+		 local pos, info = Prodiction.GetPrediction(Target, SpellW.Range, SpellW.Speed, SpellW.Delay, SpellW.Width)
+		 if pos then
+			CastSpell(_W, pos.x, pos.z)
+		end
 	end
 end
+
+function CastE(Target)	
+	if menu.pred.Prodiction and ValidTarget(Target,SpellE.Range) then
+		 local pos, info = Prodiction.GetPrediction(Target, SpellE.Range, SpellE.Speed, SpellE.Delay, SpellE.Width)
+		 if pos then
+			CastSpell(_E, pos.x, pos.z)
+		end
+	end
+end
+
 
 function IgniteKS()
 	if menu.KS.useIG then
@@ -391,6 +393,14 @@ function OnDraw()
 	end
 
 	if menu.Draw.DrawQ then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+	
+	if menu.Draw.DrawW and not notisCougar() then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+	
+	if menu.Draw.DrawW and not notisCougar() then
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
 	end
 
