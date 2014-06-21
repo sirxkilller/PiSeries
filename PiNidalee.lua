@@ -1,11 +1,12 @@
 -- PiNidalee - simple as f***
 
-local version = "1.01"
+local version = "1.02"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
 
 require 'VPrediction'
+require "Collision"
 require 'Prodiction'
 require 'SOW'
 
@@ -38,6 +39,7 @@ end
 
 local scriptName = "PiNidalee"
 local VP   = nil
+local Prodict = ProdictManager.GetInstance()
 local menu = nil
 local target = nil
 local SpellQ = {}
@@ -106,6 +108,7 @@ end
 
 	menu:addSubMenu("Drawings", "Draw")
 		menu.Draw:addParam("DrawTarget", "Draw Target", SCRIPT_PARAM_ONOFF, true)
+		menu.Draw:addParam("DrawCollision", "Draw Collision", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawQ", "Draw Q", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawW", "Draw W if Cougar", SCRIPT_PARAM_ONOFF, true)
 		menu.Draw:addParam("DrawE", "Draw E if Cougar", SCRIPT_PARAM_ONOFF, true)
@@ -136,7 +139,13 @@ function OnLoad()
 	setupMenu()
 	PiSet()
 	notisCougar()
-
+	PreQ = Collision(SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width)
+	for I = 1, heroManager.iCount do
+		local hero = heroManager:GetHero(I)
+		if hero.team ~= myHero.team then
+			Prodict:AddProdictionObject(_Q, SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width, myHero, CastQ):CanNotMissMode(true, hero)
+		end
+	end
 end
 
 function notisCougar()
@@ -202,7 +211,11 @@ function combo()
 	if notisCougar() and target and QReady and menu.combo.useQ then
 		CastQ(target)
 	end
-	if notisCougar() and not QReady and target and menu.extra.smart and GetDistance(target) <= 200 then CastSpell(_R) end
+	if notisCougar() and not QReady and target and menu.extra.smart then 
+		if target and GetDistance(target) <= 200 then 
+			CastSpell(_R) 
+		end
+	end
 	if not notisCougar() and target then
 		if menu.combo.useW then
 			CastW(target)
@@ -213,7 +226,7 @@ function combo()
 		if menu.combo.useQ2 and target then
 			CastQ(target)
 		end
-		if not notisCougar() and not EReady and not QReady and not WReady and GetDistance(target) < 1250 and menu.extra.smart then
+		if not notisCougar() and not EReady and not QReady and not WReady and target and GetDistance(target) < 1250 and menu.extra.smart then
 			CastSpell(_R)
 		end
 	end
@@ -317,7 +330,10 @@ end
 function CastQ(Target)	
 	if menu.pred.Prodiction and ValidTarget(Target,SpellQ.Range) then
 		 local pos, info = Prodiction.GetPrediction(Target, SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width)
-		 if pos then
+		 local Collide = PreQ:GetMinionCollision(pos, myHero)
+		 if pos and not Collide and notisCougar() then
+			CastSpell(_Q, pos.x, pos.z)
+		 elseif pos and not notisCougar() then
 			CastSpell(_Q, pos.x, pos.z)
 		end
 	end
@@ -396,11 +412,15 @@ function OnDraw()
 	end
 	
 	if menu.Draw.DrawW and not notisCougar() then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellW.Range, 1,  ARGB(255, 0, 255, 255))
 	end
 	
-	if menu.Draw.DrawW and not notisCougar() then
-		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellQ.Range, 1,  ARGB(255, 0, 255, 255))
+	if menu.Draw.DrawE and not notisCougar() then
+		DrawCircle3D(myHero.x, myHero.y, myHero.z, SpellE.Range, 1,  ARGB(255, 0, 255, 255))
+	end
+	
+	if menu.Draw.DrawCollision and notisCougar() then
+		PreQ:DrawCollision(myHero, mousePos)
 	end
 
 end
