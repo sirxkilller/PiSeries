@@ -1,0 +1,16 @@
+21.06.2014
+-			Pushed 1.02 :
+-			Minimalized Lib Erros but still continung (BoL issue?)
+-			Prodiction Collision fixed and current state is very good
+-			Added a possibility to draw the Collision
+-			Fixed the W - E Cougar Drawing
+    
+21.06.2014
+
+-            Pushed 1.01 :
+-            Removed "test" Spam.
+-            Use W to MousePos if in Cougar mode
+-            No more Lib Errors
+
+20.06.2014 - 1.00 Initial Release
+18.06.2014 - Releasing Thread
