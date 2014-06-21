@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.00"
+local version = "1.01"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -59,7 +59,7 @@ function setupMenu()
 	
 	menu:addSubMenu("Combo and Keybindings", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		menu.combo:addParam("jump","Use W to MousePos (Cougar and Human)",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
+		menu.combo:addParam("jump","Use W to MousePos (Cougar)",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
 		menu.combo:addParam("Heal","Heal",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("A"))
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
 		menu.combo:addParam("useQ",   "Use Q - Normal Form",         SCRIPT_PARAM_ONOFF,     true)
@@ -178,8 +178,7 @@ function OnTick()
 		EnemyMinions:update()
 		notisCougar()
 		Checks()	
-		if menu.combo.jump then 
-			print('test')
+		if menu.combo.jump and not notisCougar() then 
 			CastSpell(_W,mousePos.x,mousePos.z) 
 		end
 		if notisCougar() and Ally ~= nil then
@@ -203,7 +202,7 @@ function combo()
 	if notisCougar() and target and QReady and menu.combo.useQ then
 		CastQ(target)
 	end
-	if notisCougar() and not QReady and menu.extra.smart and GetDistance(target) <= 200 then CastSpell(_R) end
+	if notisCougar() and not QReady and target and menu.extra.smart and GetDistance(target) <= 200 then CastSpell(_R) end
 	if not notisCougar() and target then
 		if menu.combo.useW then
 			CastW(target)
