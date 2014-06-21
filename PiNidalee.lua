@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.02"
+local version = "1.03"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -8,6 +8,7 @@ if myHero.charName ~= "Nidalee" then return end
 require 'VPrediction'
 require "Collision"
 require 'Prodiction'
+require 'Selector'
 require 'SOW'
 
 local UPDATE_NAME = "PiNidalee"
@@ -39,7 +40,8 @@ end
 
 local scriptName = "PiNidalee"
 local VP   = nil
-local Prodict = ProdictManager.GetInstance()
+local Prodict = nil
+local Select = nil
 local menu = nil
 local target = nil
 local SpellQ = {}
@@ -61,7 +63,7 @@ function setupMenu()
 	
 	menu:addSubMenu("Combo and Keybindings", "combo")
 		menu.combo:addParam("active","Combo active",SCRIPT_PARAM_ONKEYDOWN, false, 32)
-		menu.combo:addParam("jump","Use W to MousePos (Cougar)",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
+		menu.combo:addParam("jump","Jump",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Z"))
 		menu.combo:addParam("Heal","Heal",SCRIPT_PARAM_ONKEYDOWN, false, string.byte("A"))
 		menu.combo:addParam("sep",    "",              SCRIPT_PARAM_INFO,      "")
 		menu.combo:addParam("useQ",   "Use Q - Normal Form",         SCRIPT_PARAM_ONOFF,     true)
@@ -85,16 +87,17 @@ function setupMenu()
 		menu.Heal:addParam("sep","Health & Mana Settings",SCRIPT_PARAM_INFO,"")
 		menu.Heal:addParam("AHealth","Minimum Health Percentage to Heal",4,60,0,100,0)
 		menu.Heal:addParam("AMana","Minimum Mana Percentage to Heal",4,60,0,100,0)
+		
 	for i = 1, heroManager.iCount do
 		local hero = heroManager:GetHero(i)
-		if hero.team == myHero.team then
-			if hero == myHero then
-				menu.Heal.Priority:addParam(hero.charName,hero.charName,4,1,1,5,0)
-			else
-				menu.Heal.Priority:addParam(hero.charName,hero.charName,4,2,1,5,0)
+			if hero.team == myHero.team then
+				if hero == myHero then
+					menu.Heal.Priority:addParam(hero.charName,hero.charName,4,1,1,5,0)
+				else
+					menu.Heal.Priority:addParam(hero.charName,hero.charName,4,2,1,5,0)
+				end
+			end
 		end
-	end
-end
 		
 	menu:addSubMenu("Killsteal", "KS")
 		menu.KS:addParam("active", "Turn KS on",          				 	SCRIPT_PARAM_ONOFF, true)
@@ -132,20 +135,7 @@ end
 end
 
 function OnLoad()
-
-	printMessage = function(message) print("<font color=\"#00A300\"><b>"..scriptName.."</b></font> <font color=\"#FFFFFF\">"..message.."</font>") end
-	VP = VPrediction()
-	OW = SOW(VP)
-	setupMenu()
 	PiSet()
-	notisCougar()
-	PreQ = Collision(SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width)
-	for I = 1, heroManager.iCount do
-		local hero = heroManager:GetHero(I)
-		if hero.team ~= myHero.team then
-			Prodict:AddProdictionObject(_Q, SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width, myHero, CastQ):CanNotMissMode(true, hero)
-		end
-	end
 end
 
 function notisCougar()
@@ -165,35 +155,50 @@ function notisCougar()
 end
 
 function PiSet()
-	ts = TargetSelector(TARGET_LESS_CAST_PRIORITY, 1250, DAMAGE_MAGICAL)
-	ts.name = "Nidalee Reworked"
-	menu:addTS(ts)
-	EnemyMinions = minionManager(MINION_ENEMY, 950, myHero, MINION_SORT_MAXHEALTH_DEC)
-    printMessage('PiNidalee ' .. tostring(version) .. ' loaded!')
+	-- intializing Libs
+	VP = VPrediction()
+	OW = SOW(VP)
+	Select = Selector.Instance() 
+	Prodict = ProdictManager.GetInstance()
+	-- Menu
+	setupMenu()
+	-- selfwritten functions
+	notisCougar()
+	ProFunc()
+	-- Prediction
+	PreQ = Collision(SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width)
+	-- Simple chat func by Pain thank you
+	printMessage = function(message) print("<font color=\"#00A300\"><b>"..scriptName.."</b></font> <font color=\"#FFFFFF\">"..message.."</font>") end
+	printMessage('PiNidalee ' .. tostring(version) .. ' loaded!')
+	-- end the setup
     PiSetUp = true
 end
 
 function OnTick()
 	OW:EnableAttacks()
 	if PiSetUp then
-		if menu.harass.active then harass() end
-		if menu.combo.active then combo() end
+	    target = Selector.GetTarget(SelectorMenu.Get().mode, nil, {distance = 1250})
 		AddTickCallback(KS)
-		ts:update()
 		KillSteal()
-		target = ts.target
 		friend = GrabAlly(SpellE.Range)
 		OW:ForceTarget(target)
-		EnemyMinions:update()
 		notisCougar()
 		Checks()	
+		
+		if menu.harass.active then harass() end
+		if menu.combo.active then combo() end
+		
 		if menu.combo.jump and not notisCougar() then 
 			CastSpell(_W,mousePos.x,mousePos.z) 
+		elseif menu.combo.jump and notisCougar() then
+			CastSpell(_R)
+			CastSpell(_W,mousePos.x,mousePos.z) 
 		end
-		if notisCougar() and Ally ~= nil then
+		
+		if notisCougar() and friend ~= nil then
 			if menu.Heal.Auto then
-				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (Ally.health/Ally.maxHealth * 100 < menu.Heal.AHealth) then
-					CastSpell(_E,Ally)
+				if (myHero.mana/myHero.maxMana * 100 > menu.Heal.AMana) and (friend.health/friend.maxHealth * 100 < menu.Heal.AHealth) then
+					CastSpell(_E,friend)
 				end
 			end
 		elseif menu.combo.Heal then
@@ -204,19 +209,19 @@ end
 
 
 function combo()
+
 	OW:DisableAttacks()
 	local m = myHero
 	if not notisCougar() then OW:EnableAttacks() end
+	if notisCougar() and target and QReady and menu.combo.useQ then CastQ(target) end
 	
-	if notisCougar() and target and QReady and menu.combo.useQ then
-		CastQ(target)
-	end
 	if notisCougar() and not QReady and target and menu.extra.smart then 
 		if target and GetDistance(target) <= 200 then 
 			CastSpell(_R) 
 		end
 	end
-	if not notisCougar() and target then
+	
+	if not	notisCougar() and target then
 		if menu.combo.useW then
 			CastW(target)
 		end
@@ -230,80 +235,82 @@ function combo()
 			CastSpell(_R)
 		end
 	end
+	
 	if not QReady and notisCougar() then OW:EnableAttacks() end
+	
 end
 
 function harass()
 
 	if menu.harass.mana > (player.mana / player.maxMana) * 100 then return end
 
-	if notisCougar() and target and QReady and menu.harass.useQ then
-		CastQ(target)
+	if notisCougar() and target and QReady and menu.harass.useQ then CastQ(target) end
+	
+end
+
+function GrabAlly(range)
+	if menu.Heal.HealA == 1 then
+		return LowestAlly(range)
+	elseif menu.Heal.HealA == 2 then
+		return NearMouseAlly(range)
+	elseif menu.Heal.HealA == 3 then
+		return PrioritizedAlly(range)
 	end
 end
 
-function Farm()
-		EnemyMinions:update()
-		if QReady and menu.farm.useQ then
-		local qDmg = getDmg("Q",EnemyMinions.objects[1],myHero)
-		if qDmg > EnemyMinions.objects[1].health then
-		Packets(_Q,EnemyMinions.objects[1])	
-		end	
-	end
- end
-
-	function GrabAlly(range)
-		if menu.Heal.HealA == 1 then
-			return LowestAlly(range)
-		elseif menu.Heal.HealA == 2 then
-			return NearMouseAlly(range)
-		elseif menu.Heal.HealA == 3 then
-			return PrioritizedAlly(range)
-		end
-	end
-	function LowestAlly(range)
-		for i = 1, heroManager.iCount do
-			hero = heroManager:GetHero(i)
-			if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
-				if heroTarget == nil then
-					heroTarget = hero
-				elseif hero.health/hero.maxHealth < heroTarget.health/heroTarget.maxHealth then
-					heroTarget = hero
-				end
+function LowestAlly(range)
+	for i = 1, heroManager.iCount do
+		hero = heroManager:GetHero(i)
+		if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
+			if heroTarget == nil then
+				heroTarget = hero
+			elseif hero.health/hero.maxHealth < heroTarget.health/heroTarget.maxHealth then
+				heroTarget = hero
 			end
 		end
-		return heroTarget
 	end
+	return heroTarget
+end
 	
-	function NearMouseAlly(range)
-		for i = 1, heroManager.iCount do
-			hero = heroManager:GetHero(i)
+function NearMouseAlly(range)
+	for i = 1, heroManager.iCount do
+		hero = heroManager:GetHero(i)
+	if heroTarget == nil then return end
+		if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
+			if heroTarget == nil then
+				heroTarget = hero
+			elseif GetDistance(myHero,hero) < GetDistance(myHero,heroTarget) then
+				heroTarget = hero
+			end
+		end
+	end
+	return heroTarget
+end
+	
+function PrioritizedAlly(range)
+	for i = 1, heroManager.iCount do
+		hero = heroManager:GetHero(i)
 		if heroTarget == nil then return end
-			if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
-				if heroTarget == nil then
-					heroTarget = hero
-				elseif GetDistance(myHero,hero) < GetDistance(myHero,heroTarget) then
-					heroTarget = hero
-				end
+		if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
+			if heroTarget == nil then
+				heroTarget = hero
+			elseif menu.Heal.Priority[hero.charName] < menu.Heal.Priority[heroTarget] then
+				heroTarget = hero
 			end
 		end
-		return heroTarget
 	end
+	return heroTarget
+end
+
 	
-	function PrioritizedAlly(range)
-		for i = 1, heroManager.iCount do
-			hero = heroManager:GetHero(i)
-			if heroTarget == nil then return end
-			if hero.team == myHero.team and not hero.dead and GetDistance(myHero,hero) <= range then
-				if heroTarget == nil then
-					heroTarget = hero
-				elseif menu.Heal.Priority[hero.charName] < menu.Heal.Priority[heroTarget] then
-					heroTarget = hero
-				end
-			end
+function ProFunc()
+	for I = 1, heroManager.iCount do
+	local hero = heroManager:GetHero(I)
+		if hero.team ~= myHero.team then
+			Prodict:AddProdictionObject(_Q, SpellQ.Range, SpellQ.Speed, SpellQ.Delay, SpellQ.Width, myHero, CastQ):CanNotMissMode(true, hero)
 		end
-		return heroTarget
 	end
+end
 
 function KillSteal()
 	if menu.KS.active then
@@ -321,10 +328,6 @@ function KillSteal()
 	end
 end
 	IgniteKS()
-end
-
-local function getHitBoxRadius(target)
-	return GetDistance(target, target.minBBox)
 end
 
 function CastQ(Target)	
@@ -373,22 +376,14 @@ function IgniteKS()
 	end
 end
 
-function isCharmed(target)
-    for i = 1, target.buffCount do
-        local tBuff = target:getBuff(i)
-        if tBuff.valid and BuffIsValid(tBuff) and tBuff.name == CHARM_NAME then
-            return true
-        end
-    end
-    return false
-end
-
 function Checks()
+
 	QReady = (myHero:CanUseSpell(_Q) == READY)
 	WReady = (myHero:CanUseSpell(_W) == READY)
 	EReady = (myHero:CanUseSpell(_E) == READY)
 	RReady = (myHero:CanUseSpell(_R) == READY)
 	
+	-- thanks to dieno
 	if myHero:GetSpellData(SUMMONER_1).name:find("SummonerDot") then
             ignite = SUMMONER_1
     elseif myHero:GetSpellData(SUMMONER_2).name:find("SummonerDot") then

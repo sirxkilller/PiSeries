@@ -1,4 +1,12 @@
 21.06.2014
+-			Pushed 1.03 :
+-			Now the Selector Lib is required and being used. (In my GitHub downloadable.)	
+-			Removed not needed functions.
+-			Fixed the Healing functions.
+-			Updated the W Jump to automatically change rapid fast to Cougar and Jump.
+-			Cleaned Code and better Performance.
+
+21.06.2014
 -			Pushed 1.02 :
 -			Minimalized Lib Erros but still continung (BoL issue?)
 -			Prodiction Collision fixed and current state is very good
@@ -7,10 +15,10 @@
     
 21.06.2014
 
--            Pushed 1.01 :
--            Removed "test" Spam.
--            Use W to MousePos if in Cougar mode
--            No more Lib Errors
+-           Pushed 1.01 :
+-           Removed "test" Spam.
+-           Use W to MousePos if in Cougar mode
+-           No more Lib Errors
 
 20.06.2014 - 1.00 Initial Release
 18.06.2014 - Releasing Thread
