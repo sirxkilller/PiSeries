@@ -1,3 +1,9 @@
+24.06.2014
+-			Pushed 1.04 :
+-			Optimized Smart R
+-			Fixed E in Cougar.
+-			Uses W to GapClose and Casts First now.
+-			Opimizations.
 21.06.2014
 -			Pushed 1.03 :
 -			Now the Selector Lib is required and being used. (In my GitHub downloadable.)	

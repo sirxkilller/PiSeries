@@ -1,6 +1,6 @@
 -- PiNidalee - simple as f***
 
-local version = "1.03"
+local version = "1.05"
 local AUTOUPDATE = true
 
 if myHero.charName ~= "Nidalee" then return end
@@ -48,7 +48,7 @@ local SpellQ = {}
 local SpellW = {}
 local SpellE = {}
 local PiSetUp = false
-local EnemyMinions, JungleMinions = nil, nil
+local QReady,WReady,EReady,RReady = nil,nil,nil,nil
 local ignite, igniteReady = nil, false
 
 function setupMenu()
@@ -139,7 +139,6 @@ function OnLoad()
 end
 
 function notisCougar()
-	local couRange = myHero.range + 50
 
 	if myHero:GetSpellData(_Q).name == "JavelinToss" then
 		SpellQ = {Speed = 1600, Range = 1250, Delay = 0.1, Width = 30}
@@ -147,9 +146,9 @@ function notisCougar()
 		SpellE = {Range = 600}
 		return true
 	elseif myHero:GetSpellData(_Q).name == "Takedown" then
-		SpellQ = {Range = couRange}
+		SpellQ = {Range = 150}
 		SpellW = {Range = 450, Speed = math.huge, Delay = 0.275, Width = 200}
-		SpellE = {range = couRange, Speed = math.huge, Delay = 0.25, Width = 250}
+		SpellE = {range = 150, Speed = math.huge, Delay = 0.25, Width = 250}
 		return false
 	end
 end
@@ -177,7 +176,7 @@ end
 function OnTick()
 	OW:EnableAttacks()
 	if PiSetUp then
-	    target = Selector.GetTarget(SelectorMenu.Get().mode, nil, {distance = 1250})
+	  target = Selector.GetTarget(SelectorMenu.Get().mode, nil, {distance = 1250})
 		AddTickCallback(KS)
 		KillSteal()
 		friend = GrabAlly(SpellE.Range)
@@ -211,12 +210,11 @@ end
 function combo()
 
 	OW:DisableAttacks()
-	local m = myHero
 	if not notisCougar() then OW:EnableAttacks() end
 	if notisCougar() and target and QReady and menu.combo.useQ then CastQ(target) end
 	
 	if notisCougar() and not QReady and target and menu.extra.smart then 
-		if target and GetDistance(target) <= 200 then 
+		if target and GetDistance(target) <= 450 then 
 			CastSpell(_R) 
 		end
 	end
@@ -352,7 +350,7 @@ function CastW(Target)
 end
 
 function CastE(Target)	
-	if menu.pred.Prodiction and ValidTarget(Target,SpellE.Range) then
+	if menu.pred.Prodiction and ValidTarget(Target,SpellE.Range) and not notisCougar() then
 		 local pos, info = Prodiction.GetPrediction(Target, SpellE.Range, SpellE.Speed, SpellE.Delay, SpellE.Width)
 		 if pos then
 			CastSpell(_E, pos.x, pos.z)
